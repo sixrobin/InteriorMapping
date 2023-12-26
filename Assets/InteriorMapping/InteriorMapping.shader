@@ -90,14 +90,14 @@ Shader "Interior Mapping"
                 if (length(ceilingIntersection - i.worldPos) < length(wallIntersection - i.worldPos))
                 {
                     if (length(ceilingIntersection - i.worldPos) < length(backWallIntersection - i.worldPos))
-                        return tex2D(_CeilingTex, ceilingIntersection.xz * _CeilingsCount);
-                    return tex2D(_WallTex, backWallIntersection.xy * _WallsCount);
+                        return tex2D(_CeilingTex, ceilingIntersection.xz * _WallsCount);
+                    return tex2D(_WallTex, backWallIntersection.xy * float2(_WallsCount, _CeilingsCount));
                 }
                 else
                 {
                     if (length(wallIntersection - i.worldPos) < length(backWallIntersection - i.worldPos))
-                        return tex2D(_WallTex, wallIntersection.yz * _WallsCount);
-                    return tex2D(_WallTex, backWallIntersection.xy * _WallsCount);
+                        return tex2D(_WallTex, wallIntersection.yz * _CeilingsCount);
+                    return tex2D(_WallTex, backWallIntersection.xy * float2(_WallsCount, _CeilingsCount));
                 }
             }
             
