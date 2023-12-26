@@ -6,6 +6,7 @@ Shader "Interior Mapping"
         _WallTex ("Wall Texture", 2D) = "white" {}
         _CeilingsCount ("Ceiling Count", Float) = 1
         _WallsCount ("Walls Count", Float) = 1
+        _Depth ("Depth", Float) = 1
     }
     
     SubShader
@@ -43,7 +44,8 @@ Shader "Interior Mapping"
             sampler2D _WallTex;
             float _CeilingsCount;
             float _WallsCount;
-                
+            float _Depth;
+            
             float3 rayToPlaneIntersection(float3 planeNormal, float3 planePosition, float3 rayStart, float3 rayDirection)
             {
                 // https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection.html
@@ -83,19 +85,19 @@ Shader "Interior Mapping"
                     ? rayToPlaneIntersection(RIGHT, float3(wallRightPos, 0, 0), cameraWorldPos, cameraDirection)
                     : rayToPlaneIntersection(RIGHT, float3(wallLeftPos, 0, 0), cameraWorldPos, cameraDirection);
 
-                float3 backWallIntersection = rayToPlaneIntersection(FORWARD, float3(0, 0, wallBackPos), cameraWorldPos, cameraDirection);
+                float3 backWallIntersection = rayToPlaneIntersection(FORWARD, float3(0, 0, wallBackPos * _Depth), cameraWorldPos, cameraDirection);
 
                 if (length(ceilingIntersection - i.worldPos) < length(wallIntersection - i.worldPos))
                 {
                     if (length(ceilingIntersection - i.worldPos) < length(backWallIntersection - i.worldPos))
-                        return tex2D(_CeilingTex, ceilingIntersection.xz);
-                    return tex2D(_WallTex, backWallIntersection.xy);
+                        return tex2D(_CeilingTex, ceilingIntersection.xz * _CeilingsCount);
+                    return tex2D(_WallTex, backWallIntersection.xy * _WallsCount);
                 }
                 else
                 {
                     if (length(wallIntersection - i.worldPos) < length(backWallIntersection - i.worldPos))
-                        return tex2D(_WallTex, wallIntersection.yz);
-                    return tex2D(_WallTex, backWallIntersection.xy);
+                        return tex2D(_WallTex, wallIntersection.yz * _WallsCount);
+                    return tex2D(_WallTex, backWallIntersection.xy * _WallsCount);
                 }
             }
             
