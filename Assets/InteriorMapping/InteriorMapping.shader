@@ -3,7 +3,9 @@ Shader "Interior Mapping"
     Properties
     {
         _CeilingTex ("Ceiling Texture", 2D) = "white" {}
+        _WallTex ("Wall Texture", 2D) = "white" {}
         _CeilingsCount ("Ceiling Count", Float) = 1
+        _WallsCount ("Walls Count", Float) = 1
     }
     
     SubShader
@@ -22,6 +24,9 @@ Shader "Interior Mapping"
 
             #include "UnityCG.cginc"
 
+            #define CEILING_NORMAL float3(0, 1, 0)
+            #define WALL_NORMAL float3(1, 0, 0)
+
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -34,12 +39,14 @@ Shader "Interior Mapping"
             };
 
             sampler2D _CeilingTex;
+            sampler2D _WallTex;
             float _CeilingsCount;
+            float _WallsCount;
                 
             float3 rayToPlaneIntersection(float3 planeNormal, float3 planePosition, float3 rayStart, float3 rayDirection)
             {
                 // https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection.html
-                float distance = dot((planePosition - rayStart), planeNormal) / dot(rayDirection, planeNormal);
+                float distance = dot(planePosition - rayStart, planeNormal) / dot(rayDirection, planeNormal);
                 return rayStart + rayDirection * distance;
             }
             
@@ -53,25 +60,33 @@ Shader "Interior Mapping"
 
             fixed4 frag(v2f i) : SV_Target
             {
+                // https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
+
                 float3 cameraWorldPos = _WorldSpaceCameraPos;
                 float3 cameraDirection = normalize(cameraWorldPos - i.worldPos);
 
-                // float3 debugIntersection = rayToPlaneIntersection(_DebugPlaneNormal, _DebugPlanePosition, _DebugRayStart, normalize(_DebugRayDirection));
-                // return fixed4(length(debugIntersection - i.worldPos).xxx, 1);
-
-                // https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
-                float d = 1.0 / _CeilingsCount;
                 float y = i.worldPos.y;
-                float ceilingHeight = ceil(y / d) * d;
-                float floorHeight = (ceil(y / d) - 1) * d;
-
-                float3 intersection;
-                if (cameraDirection.y < 0)
-                    intersection = rayToPlaneIntersection(float3(0, -1, 0), float3(0, ceilingHeight, 0), cameraWorldPos, cameraDirection);
-                else
-                    intersection = rayToPlaneIntersection(float3(0, 1, 0), float3(0, floorHeight, 0), cameraWorldPos, cameraDirection);
+                float dc = 1.0 / _CeilingsCount;
+                float ceilingPos = ceil(y / dc) * dc;
+                float floorPos = (ceil(y / dc) - 1) * dc;
                 
-                return tex2D(_CeilingTex, intersection.xz);
+                float3 ceilingIntersection = cameraDirection.y < 0
+                    ? rayToPlaneIntersection(CEILING_NORMAL, float3(0, ceilingPos, 0), cameraWorldPos, cameraDirection)
+                    : rayToPlaneIntersection(CEILING_NORMAL, float3(0, floorPos, 0), cameraWorldPos, cameraDirection);
+
+                float x = i.worldPos.x;
+                float dw = 1.0 / _WallsCount;
+                float wallRightPos = ceil(x / dw) * dw;
+                float wallLeftPos = (ceil(x / dw) - 1) * dw;
+                
+                float3 wallIntersection = cameraDirection.x < 0
+                    ? rayToPlaneIntersection(WALL_NORMAL, float3(wallRightPos, 0, 0), cameraWorldPos, cameraDirection)
+                    : rayToPlaneIntersection(WALL_NORMAL, float3(wallLeftPos, 0, 0), cameraWorldPos, cameraDirection);
+
+                if (length(ceilingIntersection - i.worldPos) < length(wallIntersection - i.worldPos))
+                    return tex2D(_CeilingTex, ceilingIntersection.xz);
+                else
+                    return tex2D(_WallTex, wallIntersection.yz);
             }
             
             ENDCG
