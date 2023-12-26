@@ -44,7 +44,7 @@ Material:
     - _CeilingInterval: 1
     - _CeilingsCount: 4
     - _CeilingsOffset: 0.5
-    - _Depth: 1
+    - _Depth: 0.33333334
     - _WallsCount: 4
     m_Colors:
     - _CeilingColor: {r: 1, g: 0.8679676, b: 0.3820755, a: 1}

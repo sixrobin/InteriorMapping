@@ -95,7 +95,7 @@ Shader "Interior Mapping"
                     ? rayToPlaneIntersection(RIGHT, float3(wallRightPos, 0, 0), cameraWorldPos, cameraDirection)
                     : rayToPlaneIntersection(RIGHT, float3(wallLeftPos, 0, 0), cameraWorldPos, cameraDirection);
 
-                float wallBackPos = ceil(i.worldPos.z + 1);
+                float wallBackPos = ceil(i.worldPos.z + 1e-3);
                 float3 backWallIntersection = rayToPlaneIntersection(FORWARD, float3(0, 0, wallBackPos * _Depth), cameraWorldPos, cameraDirection);
 
                 if (length(ceilingIntersection - i.worldPos) < length(wallIntersection - i.worldPos))
