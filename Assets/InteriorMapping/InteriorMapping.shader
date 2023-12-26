@@ -24,8 +24,9 @@ Shader "Interior Mapping"
 
             #include "UnityCG.cginc"
 
-            #define CEILING_NORMAL float3(0, 1, 0)
-            #define WALL_NORMAL float3(1, 0, 0)
+            #define RIGHT   float3(1, 0, 0)
+            #define UP      float3(0, 1, 0)
+            #define FORWARD float3(0, 0, 1)
 
             struct appdata
             {
@@ -64,29 +65,38 @@ Shader "Interior Mapping"
 
                 float3 cameraWorldPos = _WorldSpaceCameraPos;
                 float3 cameraDirection = normalize(cameraWorldPos - i.worldPos);
-
-                float y = i.worldPos.y;
+                
                 float dc = 1.0 / _CeilingsCount;
-                float ceilingPos = ceil(y / dc) * dc;
-                float floorPos = (ceil(y / dc) - 1) * dc;
+                float ceilingPos = ceil(i.worldPos.y / dc) * dc;
+                float floorPos = (ceil(i.worldPos.y / dc) - 1) * dc;
                 
                 float3 ceilingIntersection = cameraDirection.y < 0
-                    ? rayToPlaneIntersection(CEILING_NORMAL, float3(0, ceilingPos, 0), cameraWorldPos, cameraDirection)
-                    : rayToPlaneIntersection(CEILING_NORMAL, float3(0, floorPos, 0), cameraWorldPos, cameraDirection);
+                    ? rayToPlaneIntersection(UP, float3(0, ceilingPos, 0), cameraWorldPos, cameraDirection)
+                    : rayToPlaneIntersection(UP, float3(0, floorPos, 0), cameraWorldPos, cameraDirection);
 
-                float x = i.worldPos.x;
                 float dw = 1.0 / _WallsCount;
-                float wallRightPos = ceil(x / dw) * dw;
-                float wallLeftPos = (ceil(x / dw) - 1) * dw;
+                float wallRightPos = ceil(i.worldPos.x / dw) * dw;
+                float wallLeftPos = (ceil(i.worldPos.x / dw) - 1) * dw;
+                float wallBackPos = ceil(i.worldPos.z + 1);
                 
                 float3 wallIntersection = cameraDirection.x < 0
-                    ? rayToPlaneIntersection(WALL_NORMAL, float3(wallRightPos, 0, 0), cameraWorldPos, cameraDirection)
-                    : rayToPlaneIntersection(WALL_NORMAL, float3(wallLeftPos, 0, 0), cameraWorldPos, cameraDirection);
+                    ? rayToPlaneIntersection(RIGHT, float3(wallRightPos, 0, 0), cameraWorldPos, cameraDirection)
+                    : rayToPlaneIntersection(RIGHT, float3(wallLeftPos, 0, 0), cameraWorldPos, cameraDirection);
+
+                float3 backWallIntersection = rayToPlaneIntersection(FORWARD, float3(0, 0, wallBackPos), cameraWorldPos, cameraDirection);
 
                 if (length(ceilingIntersection - i.worldPos) < length(wallIntersection - i.worldPos))
-                    return tex2D(_CeilingTex, ceilingIntersection.xz);
+                {
+                    if (length(ceilingIntersection - i.worldPos) < length(backWallIntersection - i.worldPos))
+                        return tex2D(_CeilingTex, ceilingIntersection.xz);
+                    return tex2D(_WallTex, backWallIntersection.xy);
+                }
                 else
-                    return tex2D(_WallTex, wallIntersection.yz);
+                {
+                    if (length(wallIntersection - i.worldPos) < length(backWallIntersection - i.worldPos))
+                        return tex2D(_WallTex, wallIntersection.yz);
+                    return tex2D(_WallTex, backWallIntersection.xy);
+                }
             }
             
             ENDCG
