@@ -42,12 +42,18 @@ Material:
     m_Ints: []
     m_Floats:
     - _CeilingInterval: 1
-    - _CeilingsCount: 1
+    - _CeilingsCount: 4
     - _CeilingsOffset: 0.5
-    - _WallsCount: 1
+    - _Depth: 1
+    - _WallsCount: 4
     m_Colors:
+    - _CeilingColor: {r: 1, g: 0.8679676, b: 0.3820755, a: 1}
     - _DebugPlaneNormal: {r: 0, g: 0, b: -1, a: 0}
     - _DebugPlanePosition: {r: 0, g: 0, b: 0, a: 0}
     - _DebugRayDirection: {r: 0, g: 0, b: 1, a: 0}
     - _DebugRayStart: {r: 0, g: 0, b: -1, a: 0}
+    - _FloorColor: {r: 0.4764151, g: 0.7951506, b: 1, a: 1}
+    - _WallBackColor: {r: 0.69451547, g: 1, b: 0.6745283, a: 1}
+    - _WallLeftColor: {r: 1, g: 0.4764151, b: 0.6711366, a: 1}
+    - _WallRightColor: {r: 1, g: 0.5726423, b: 0.4764151, a: 1}
   m_BuildTextureStacks: []

@@ -7,6 +7,13 @@ Shader "Interior Mapping"
         _CeilingsCount ("Ceiling Count", Float) = 1
         _WallsCount ("Walls Count", Float) = 1
         _Depth ("Depth", Float) = 1
+        
+        [Header(COLORS)]
+        _CeilingColor ("Ceiling Color", Color) = (1,1,1,1)
+        _FloorColor ("Floor Color", Color) = (1,1,1,1)
+        _WallRightColor ("Wall Right Color", Color) = (1,1,1,1)
+        _WallLeftColor ("Wall Left Color", Color) = (1,1,1,1)
+        _WallBackColor ("Wall Back Color", Color) = (1,1,1,1)
     }
     
     SubShader
@@ -45,6 +52,12 @@ Shader "Interior Mapping"
             float _CeilingsCount;
             float _WallsCount;
             float _Depth;
+
+            float4 _CeilingColor;
+            float4 _FloorColor;
+            float4 _WallRightColor;
+            float4 _WallLeftColor;
+            float4 _WallBackColor;
             
             float3 rayToPlaneIntersection(float3 planeNormal, float3 planePosition, float3 rayStart, float3 rayDirection)
             {
@@ -71,7 +84,6 @@ Shader "Interior Mapping"
                 float dc = 1.0 / _CeilingsCount;
                 float ceilingPos = ceil(i.worldPos.y / dc) * dc;
                 float floorPos = (ceil(i.worldPos.y / dc) - 1) * dc;
-                
                 float3 ceilingIntersection = cameraDirection.y < 0
                     ? rayToPlaneIntersection(UP, float3(0, ceilingPos, 0), cameraWorldPos, cameraDirection)
                     : rayToPlaneIntersection(UP, float3(0, floorPos, 0), cameraWorldPos, cameraDirection);
@@ -79,26 +91,32 @@ Shader "Interior Mapping"
                 float dw = 1.0 / _WallsCount;
                 float wallRightPos = ceil(i.worldPos.x / dw) * dw;
                 float wallLeftPos = (ceil(i.worldPos.x / dw) - 1) * dw;
-                float wallBackPos = ceil(i.worldPos.z + 1);
-                
                 float3 wallIntersection = cameraDirection.x < 0
                     ? rayToPlaneIntersection(RIGHT, float3(wallRightPos, 0, 0), cameraWorldPos, cameraDirection)
                     : rayToPlaneIntersection(RIGHT, float3(wallLeftPos, 0, 0), cameraWorldPos, cameraDirection);
 
+                float wallBackPos = ceil(i.worldPos.z + 1);
                 float3 backWallIntersection = rayToPlaneIntersection(FORWARD, float3(0, 0, wallBackPos * _Depth), cameraWorldPos, cameraDirection);
 
                 if (length(ceilingIntersection - i.worldPos) < length(wallIntersection - i.worldPos))
                 {
                     if (length(ceilingIntersection - i.worldPos) < length(backWallIntersection - i.worldPos))
-                        return tex2D(_CeilingTex, ceilingIntersection.xz * _WallsCount);
-                    return tex2D(_WallTex, backWallIntersection.xy * float2(_WallsCount, _CeilingsCount));
+                    {
+                        float4 ceilingColor = cameraDirection.y < 0 ? _CeilingColor : _FloorColor;
+                        return tex2D(_CeilingTex, ceilingIntersection.xz / float2(1, _Depth) * float2(_WallsCount, 1)) * ceilingColor;
+                    }
                 }
                 else
                 {
                     if (length(wallIntersection - i.worldPos) < length(backWallIntersection - i.worldPos))
-                        return tex2D(_WallTex, wallIntersection.yz * _CeilingsCount);
-                    return tex2D(_WallTex, backWallIntersection.xy * float2(_WallsCount, _CeilingsCount));
+                    {
+                        float4 wallColor = cameraDirection.x < 0 ? _WallRightColor : _WallLeftColor;
+                        return tex2D(_WallTex, wallIntersection.yz / float2(1, _Depth) * float2(_CeilingsCount, 1)) * wallColor;
+                    }
                 }
+
+                return tex2D(_WallTex, backWallIntersection.xy * float2(_WallsCount, _CeilingsCount)) * _WallBackColor;
+
             }
             
             ENDCG
