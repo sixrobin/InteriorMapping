@@ -39,14 +39,12 @@ Shader "Interior Mapping"
 
             struct appdata
             {
-                float2 uv     : TEXCOORD0;
                 float4 vertex : POSITION;
                 float3 normal : NORMAL;
             };
 
             struct v2f
             {
-                float2 uv       : TEXCOORD0;
                 float3 worldPos : TEXCOORD1;
                 float3 normal   : NORMAL;
                 float4 vertex   : SV_POSITION;
@@ -91,7 +89,6 @@ Shader "Interior Mapping"
             v2f vert(appdata v)
             {
                 v2f o;
-                o.uv = v.uv;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex);
                 o.normal = v.normal;
@@ -155,7 +152,7 @@ Shader "Interior Mapping"
                     }
                 }
 
-                float4 windowColor = tex2D(_WindowTex, i.uv * float2(_WallsCount, _CeilingsCount));
+                float4 windowColor = tex2D(_WindowTex, i.worldPos.xy * float2(_WallsCount, _CeilingsCount));
                 float4 color = lerp(interiorColor * roomColor, windowColor, windowColor.a);
 
                 return color;
