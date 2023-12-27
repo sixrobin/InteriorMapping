@@ -1,0 +1,7 @@
+- Interior texturing.
+- Fix quad rotation not working.
+- Fix quad scale not working.
+- Fix odd column/row counts (apply an offset to worldPos?).
+- Windows reflection/refraction.
+- Automatic depth based on rows/columns.
+- Depth Min/Max.

@@ -41,12 +41,14 @@ Shader "Interior Mapping"
             {
                 float2 uv     : TEXCOORD0;
                 float4 vertex : POSITION;
+                float3 normal : NORMAL;
             };
 
             struct v2f
             {
                 float2 uv       : TEXCOORD0;
                 float3 worldPos : TEXCOORD1;
+                float3 normal   : NORMAL;
                 float4 vertex   : SV_POSITION;
             };
 
@@ -74,6 +76,17 @@ Shader "Interior Mapping"
             {
 	            return frac(sin(dot(s, float2(12.9898, 78.233))) * 43758.5453);
             }
+
+            float3x3 rotation_matrix_y(float theta)
+            {
+                float alpha = theta * UNITY_PI / 180;
+                float s = sin(alpha);
+                float c = cos(alpha);
+                        
+                return float3x3(+c, +0, +s,
+                                +0, +1, +0,
+                                -s, +0, +c);
+            }
             
             v2f vert(appdata v)
             {
@@ -81,6 +94,7 @@ Shader "Interior Mapping"
                 o.uv = v.uv;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex);
+                o.normal = v.normal;
                 return o;
             }
 
@@ -89,16 +103,15 @@ Shader "Interior Mapping"
                 // https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
 
                 float3 cameraWorldPos = _WorldSpaceCameraPos;
-                
                 float3 cameraDirection = normalize(cameraWorldPos - i.worldPos);
-                
+
                 float dc = 1.0 / _CeilingsCount;
                 float ceilingPos = ceil(i.worldPos.y / dc) * dc;
                 float floorPos = (ceil(i.worldPos.y / dc) - 1) * dc;
                 float3 ceilingIntersection = cameraDirection.y < 0
                     ? rayToPlaneIntersection(UP, float3(0, ceilingPos, 0), cameraWorldPos, cameraDirection)
                     : rayToPlaneIntersection(UP, float3(0, floorPos, 0), cameraWorldPos, cameraDirection);
-
+                
                 float dw = 1.0 / _WallsCount;
                 float wallRightPos = ceil(i.worldPos.x / dw) * dw;
                 float wallLeftPos = (ceil(i.worldPos.x / dw) - 1) * dw;
@@ -139,8 +152,7 @@ Shader "Interior Mapping"
                 }
 
                 float4 windowColor = tex2D(_WindowTex, i.uv * float2(_WallsCount, _CeilingsCount));
-                interiorColor *= roomColor;
-                float4 color = lerp(interiorColor, windowColor, windowColor.a);
+                float4 color = lerp(interiorColor * roomColor, windowColor, windowColor.a);
 
                 return color;
             }
