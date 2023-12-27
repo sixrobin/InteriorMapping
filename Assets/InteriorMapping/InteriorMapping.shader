@@ -119,8 +119,8 @@ Shader "Interior Mapping"
                     ? rayToPlaneIntersection(RIGHT, float3(wallRightPos, 0, 0), cameraWorldPos, cameraDirection)
                     : rayToPlaneIntersection(RIGHT, float3(wallLeftPos, 0, 0), cameraWorldPos, cameraDirection);
 
-                float wallBackPos = ceil(i.worldPos.z + 1e-3);
-                float3 backWallIntersection = rayToPlaneIntersection(FORWARD, float3(0, 0, wallBackPos * _Depth), cameraWorldPos, cameraDirection);
+                float wallBackPos = i.worldPos.z + _Depth;
+                float3 backWallIntersection = rayToPlaneIntersection(FORWARD, float3(0, 0, wallBackPos), cameraWorldPos, cameraDirection);
 
                 float randomID = random(ceil(i.worldPos.xy * float2(_CeilingsCount, _WallsCount)));
                 float4 roomColor = randomID < 0.25 ? float4(1,0,0,1) : randomID < 0.5 ? float4(0,1,0,1) : randomID < 0.75 ? float4(0,0,1,1) : float4(1,0,1,1);
