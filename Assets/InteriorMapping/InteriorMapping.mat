@@ -46,10 +46,10 @@ Material:
     m_Ints: []
     m_Floats:
     - _CeilingInterval: 1
-    - _CeilingsCount: 4
+    - _CeilingsCount: 6
     - _CeilingsOffset: 0.5
-    - _Depth: 0.25
-    - _WallsCount: 4
+    - _Depth: 0.33333
+    - _WallsCount: 3
     m_Colors:
     - _CeilingColor: {r: 1, g: 1, b: 1, a: 1}
     - _DebugPlaneNormal: {r: 0, g: 0, b: -1, a: 0}
