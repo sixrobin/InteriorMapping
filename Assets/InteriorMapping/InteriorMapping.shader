@@ -105,6 +105,8 @@ Shader "Interior Mapping"
                 float3 cameraWorldPos = _WorldSpaceCameraPos;
                 float3 cameraDirection = normalize(cameraWorldPos - i.worldPos);
 
+                float offset = 0.5 / 3;
+                
                 float dc = 1.0 / _CeilingsCount;
                 float ceilingPos = ceil(i.worldPos.y / dc) * dc;
                 float floorPos = (ceil(i.worldPos.y / dc) - 1) * dc;
@@ -122,8 +124,8 @@ Shader "Interior Mapping"
                 float wallBackPos = i.worldPos.z + _Depth;
                 float3 backWallIntersection = rayToPlaneIntersection(FORWARD, float3(0, 0, wallBackPos), cameraWorldPos, cameraDirection);
 
-                float randomID = random(ceil(i.worldPos.xy * float2(_CeilingsCount, _WallsCount)));
-                float4 roomColor = randomID < 0.25 ? float4(1,0,0,1) : randomID < 0.5 ? float4(0,1,0,1) : randomID < 0.75 ? float4(0,0,1,1) : float4(1,0,1,1);
+                float randomID = random(ceil(i.worldPos.xy * float2(_WallsCount, _CeilingsCount)));
+                float4 roomColor = randomID < 0.25 ? float4(1,0,1,1) : randomID < 0.5 ? float4(0,1,0,1) : randomID < 0.75 ? float4(0,0,1,1) : float4(1,1,0,1);
                 float4 interiorColor;
 
                 if (length(ceilingIntersection - i.worldPos) < length(wallIntersection - i.worldPos))
@@ -131,7 +133,7 @@ Shader "Interior Mapping"
                     if (length(ceilingIntersection - i.worldPos) < length(backWallIntersection - i.worldPos))
                     {
                         float4 ceilingColor = cameraDirection.y < 0 ? _CeilingColor : _FloorColor;
-                        interiorColor = tex2D(_CeilingTex, ceilingIntersection.xz / float2(1, _Depth) * float2(_WallsCount, 1)) * ceilingColor;
+                        interiorColor = tex2D(_CeilingTex, ceilingIntersection.xz * float2(_WallsCount, 1 / _Depth)) * ceilingColor;
                     }
                     else
                     {
@@ -143,7 +145,7 @@ Shader "Interior Mapping"
                     if (length(wallIntersection - i.worldPos) < length(backWallIntersection - i.worldPos))
                     {
                         float4 wallColor = cameraDirection.x < 0 ? _WallRightColor : _WallLeftColor;
-                        interiorColor = tex2D(_WallTex, wallIntersection.yz / float2(1, _Depth) * float2(_CeilingsCount, 1)) * wallColor;
+                        interiorColor = tex2D(_WallTex, wallIntersection.yz * float2(_CeilingsCount, 1 / _Depth)) * wallColor;
                     }
                     else
                     {
