@@ -15,6 +15,9 @@ Shader "Interior Mapping"
         _WallRightColor ("Wall Right Color", Color) = (1,1,1,1)
         _WallLeftColor ("Wall Left Color", Color) = (1,1,1,1)
         _WallBackColor ("Wall Back Color", Color) = (1,1,1,1)
+
+        [Header(DEBUG)]
+        _DbgRotation ("Debug Rotation", Float) = 0
     }
     
     SubShader
@@ -33,10 +36,11 @@ Shader "Interior Mapping"
 
             #include "UnityCG.cginc"
 
-            #define RIGHT   float3(1, 0, 0)
-            #define UP      float3(0, 1, 0)
-            #define FORWARD float3(0, 0, 1)
-
+            #define RIGHT     float3(1, 0, 0)
+            #define UP        float3(0, 1, 0)
+            #define FORWARD   float3(0, 0, 1)
+            #define DEG_2_RAD 0.01745
+            
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -62,6 +66,8 @@ Shader "Interior Mapping"
             float4 _WallRightColor;
             float4 _WallLeftColor;
             float4 _WallBackColor;
+
+            float _DbgRotation;
             
             float3 rayToPlaneIntersection(float3 planeNormal, float3 planePosition, float3 rayStart, float3 rayDirection)
             {
@@ -85,6 +91,13 @@ Shader "Interior Mapping"
                                 +0, +1, +0,
                                 -s, +0, +c);
             }
+
+            float2 RotateVector2(float2 v, float theta, float2 pivot)
+            {
+                float c = cos(theta * DEG_2_RAD);
+                float s = sin(theta * DEG_2_RAD);
+                return float2(c * (v.x - pivot.x) + s * (v.y - pivot.y) + pivot.x, c * (v.y - pivot.y) - s * (v.x - pivot.x) + pivot.y);
+            }
             
             v2f vert(appdata v)
             {
@@ -105,28 +118,36 @@ Shader "Interior Mapping"
                 i.worldPos.xy += offset;
                 float3 cameraWorldPos = _WorldSpaceCameraPos + float3(offset, 0);
                 float3 cameraDirection = normalize(cameraWorldPos - i.worldPos);
-                
+
+                float3x3 yRot = rotation_matrix_y(_DbgRotation);
+                float3 forward = -i.normal;
+                float3 right = mul(yRot, forward);
+
+                // Ceiling/floor.
                 float dc = 1.0 / _CeilingsCount;
                 float ceilingPos = ceil(i.worldPos.y / dc) * dc;
                 float floorPos = (ceil(i.worldPos.y / dc) - 1) * dc;
                 float3 ceilingIntersection = cameraDirection.y < 0
                     ? rayToPlaneIntersection(UP, float3(0, ceilingPos, 0), cameraWorldPos, cameraDirection)
                     : rayToPlaneIntersection(UP, float3(0, floorPos, 0), cameraWorldPos, cameraDirection);
-                
+
+                // Side wall.
                 float dw = 1.0 / _WallsCount;
                 float wallRightPos = ceil(i.worldPos.x / dw) * dw;
                 float wallLeftPos = (ceil(i.worldPos.x / dw) - 1) * dw;
                 float3 wallIntersection = cameraDirection.x < 0
-                    ? rayToPlaneIntersection(RIGHT, float3(wallRightPos, 0, 0), cameraWorldPos, cameraDirection)
-                    : rayToPlaneIntersection(RIGHT, float3(wallLeftPos, 0, 0), cameraWorldPos, cameraDirection);
+                    ? rayToPlaneIntersection(right, float3(wallRightPos, 0, 0), cameraWorldPos, cameraDirection)
+                    : rayToPlaneIntersection(right, float3(wallLeftPos, 0, 0), cameraWorldPos, cameraDirection);
 
-                float wallBackPos = i.worldPos.z + _Depth;
-                float3 backWallIntersection = rayToPlaneIntersection(FORWARD, float3(0, 0, wallBackPos), cameraWorldPos, cameraDirection);
+                // Back wall.
+                float wallBackPos = (i.worldPos + _Depth * forward).z;
+                float3 backWallIntersection = rayToPlaneIntersection(forward, float3(0, 0, wallBackPos), cameraWorldPos, cameraDirection);
 
-                float randomID = random(ceil(i.worldPos.xy * float2(_WallsCount, _CeilingsCount)));
-                float4 roomColor = randomID < 0.25 ? float4(1,0,1,1) : randomID < 0.5 ? float4(0,1,0,1) : randomID < 0.75 ? float4(0,0,1,1) : float4(1,1,0,1);
+                // Room ID.
+                float roomID = random(ceil(i.worldPos.xy * float2(_WallsCount, _CeilingsCount)));
+                float4 roomColor = roomID < 0.25 ? float4(1,0,1,1) : roomID < 0.5 ? float4(0,1,0,1) : roomID < 0.75 ? float4(0,0,1,1) : float4(1,1,0,1);
+
                 float4 interiorColor;
-
                 if (length(ceilingIntersection - i.worldPos) < length(wallIntersection - i.worldPos))
                 {
                     if (length(ceilingIntersection - i.worldPos) < length(backWallIntersection - i.worldPos))
