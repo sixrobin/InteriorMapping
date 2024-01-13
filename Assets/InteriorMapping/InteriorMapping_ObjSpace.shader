@@ -87,7 +87,7 @@ Shader "Interior Mapping (Object Space)"
 			float dw = 1.0 / _WallsCount;
 
 			// Ceiling/Floor.
-			if (dot(UP, rayDirection) > 0)
+			if (rayDirection.y > 0)
 			{
 				float ceilingPos = ceil(rayStart.y / dc) * dc;
 				raycast(rayDirection, rayStart, float3(0, ceilingPos, 0), UP, fixed4(ceilingPos + dc, 0, 0, 1), rayData);
@@ -99,7 +99,7 @@ Shader "Interior Mapping (Object Space)"
 			}
 
 			// Left/Right.
-			if (dot(RIGHT, rayDirection) > 0)
+			if (rayDirection.x > 0)
 			{
 		        float wallRightPos = ceil(rayStart.x / dw) * dw;
 				raycast(rayDirection, rayStart, float3(wallRightPos, 0, 0), RIGHT, fixed4(0, wallRightPos + dw, 0, 1), rayData);
@@ -111,7 +111,7 @@ Shader "Interior Mapping (Object Space)"
 			}
 
         	// Back.
-        	if (dot(FORWARD, rayDirection) > 0)
+        	if (rayDirection.z > 0)
         	{
         		float backPos = ceil(rayStart.z / dw) * dw;
 	        	raycast(rayDirection, rayStart, float3(0, 0, backPos), -FORWARD, fixed4(1, 0, 1, 1), rayData);
