@@ -53,7 +53,7 @@ Shader "Interior Mapping (Object Space)"
         	return result;
         }
 		
-		void Raycast(float3 rayDirection, float3 rayStart, float3 planePosition, float3 planeNormal, float4 color, inout FragmentRayData currentRayData)
+		void raycast(float3 rayDirection, float3 rayStart, float3 planePosition, float3 planeNormal, float4 color, inout FragmentRayData currentRayData)
 		{
 			RayPlaneIntersection intersection = rayToPlaneIntersection(rayStart, rayDirection, planeNormal, planePosition);
 			if (intersection.distance < currentRayData.distance)
@@ -74,36 +74,55 @@ Shader "Interior Mapping (Object Space)"
 
 		void surf(Input i, inout SurfaceOutputStandard o) 
 		{
+        	// https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
+
 			float3 rayDirection = normalize(i.objectViewDir);
 			float3 rayStart = i.localPosition + rayDirection * 0.0001;
 
 			FragmentRayData rayData;
 			rayData.color = float3(1, 1, 1);
-			rayData.distance = 1e+10;
+			rayData.distance = 1e+64;
+
+        	float dc = 1.0 / _CeilingsCount;
+			float dw = 1.0 / _WallsCount;
 
 			// Ceiling/Floor.
-			float dc = 1.0 / _CeilingsCount;
-			float ceilingPos = ceil(rayStart.y / dc) * dc;
-			float floorPos = (ceil(rayStart.y / dc) - 1) * dc;
 			if (dot(UP, rayDirection) > 0)
-				Raycast(rayDirection, rayStart, float3(0, ceilingPos, 0), UP, fixed4(ceilingPos + dc, 0, 0, 1), rayData);
+			{
+				float ceilingPos = ceil(rayStart.y / dc) * dc;
+				raycast(rayDirection, rayStart, float3(0, ceilingPos, 0), UP, fixed4(ceilingPos + dc, 0, 0, 1), rayData);
+			}
 			else
-				Raycast(rayDirection, rayStart, float3(0, floorPos, 0), -UP, fixed4(0, 0, ceilingPos + dc, 1), rayData);
+			{
+				float floorPos = (ceil(rayStart.y / dc) - 1) * dc;
+				raycast(rayDirection, rayStart, float3(0, floorPos, 0), -UP, fixed4(0, 0, floorPos + dc * 2, 1), rayData);
+			}
 
 			// Left/Right.
-			float dw = 1.0 / _WallsCount;
-            float wallRightPos = ceil(rayStart.x / dw) * dw;
-            float wallLeftPos = (ceil(rayStart.x / dw) - 1) * dw;
 			if (dot(RIGHT, rayDirection) > 0)
-				Raycast(rayDirection, rayStart, float3(wallRightPos, 0, 0), RIGHT, fixed4(0, wallRightPos + dw, 0, 1), rayData);
+			{
+		        float wallRightPos = ceil(rayStart.x / dw) * dw;
+				raycast(rayDirection, rayStart, float3(wallRightPos, 0, 0), RIGHT, fixed4(0, wallRightPos + dw, 0, 1), rayData);
+			}
 			else
-				Raycast(rayDirection, rayStart, float3(wallLeftPos, 0, 0), -RIGHT, fixed4(wallRightPos + dw, wallRightPos + dw, 0, 1), rayData);
+			{
+	            float wallLeftPos = (ceil(rayStart.x / dw) - 1) * dw;
+				raycast(rayDirection, rayStart, float3(wallLeftPos, 0, 0), -RIGHT, fixed4(wallLeftPos + dw * 2, wallLeftPos + dw * 2, 0, 1), rayData);
+			}
 
         	// Back.
-        	float backPos = ceil(rayStart.z / dw) * dw;
-        	Raycast(rayDirection, rayStart, float3(0, 0, backPos), -FORWARD, fixed4(1, 0, 1, 1), rayData);
+        	if (dot(FORWARD, rayDirection) > 0)
+        	{
+        		float backPos = ceil(rayStart.z / dw) * dw;
+	        	raycast(rayDirection, rayStart, float3(0, 0, backPos), -FORWARD, fixed4(1, 0, 1, 1), rayData);
+        	}
+        	else
+        	{
+        		float backPos = ceil(rayStart.z / dw - 1) * dw;
+	        	raycast(rayDirection, rayStart, float3(0, 0, backPos), -FORWARD, fixed4(1, 0, 1, 1), rayData);
+        	}
 
-			o.Albedo = saturate(rayData.color);
+			o.Albedo = rayData.color;
 		}
 		
 		ENDCG
