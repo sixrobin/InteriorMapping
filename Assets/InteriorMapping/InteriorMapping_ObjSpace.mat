@@ -23,12 +23,20 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _BackWallTex:
+        m_Texture: {fileID: 2800000, guid: af39e1b4a108f1646ae8fd899db04ec8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _CeilingTex:
-        m_Texture: {fileID: 2800000, guid: 222d773d20a60f849898b3d971c1ce4c, type: 3}
+        m_Texture: {fileID: 2800000, guid: af39e1b4a108f1646ae8fd899db04ec8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Cube:
         m_Texture: {fileID: 8900000, guid: 5b50342ca9f9ba24e8cb8d180c4a596d, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FloorTex:
+        m_Texture: {fileID: 2800000, guid: af39e1b4a108f1646ae8fd899db04ec8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -36,7 +44,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _WallTex:
-        m_Texture: {fileID: 2800000, guid: 222d773d20a60f849898b3d971c1ce4c, type: 3}
+        m_Texture: {fileID: 2800000, guid: af39e1b4a108f1646ae8fd899db04ec8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _WindowTex:
@@ -62,7 +70,7 @@ Material:
     - _DebugRayDirection: {r: 0, g: 0, b: 1, a: 0}
     - _DebugRayStart: {r: 0, g: 0, b: -1, a: 0}
     - _FloorColor: {r: 1, g: 0, b: 0.5694699, a: 1}
-    - _WallBackColor: {r: 0.056648254, g: 0.3503651, b: 0.6320754, a: 1}
+    - _WallBackColor: {r: 0, g: 0.685781, b: 1, a: 1}
     - _WallLeftColor: {r: 0.41388416, g: 1, b: 0, a: 1}
     - _WallRightColor: {r: 1, g: 1, b: 0, a: 1}
   m_BuildTextureStacks: []

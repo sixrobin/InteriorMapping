@@ -5,7 +5,9 @@ Shader "Interior Mapping (Object Space)"
 		_CeilingsCount ("Ceiling Count", Float) = 1
 		_WallsCount ("Walls Count", Float) = 1
 		_CeilingTex ("Ceiling Texture", 2D) = "white" {}
+		_FloorTex ("Floor Texture", 2D) = "white" {}
         _WallTex ("Wall Texture", 2D) = "white" {}
+        _BackWallTex ("Back Wall Texture", 2D) = "white" {}
 		
         [Header(COLORS)]
         _CeilingColor ("Ceiling Color", Color) = (1,1,1,1)
@@ -51,7 +53,9 @@ Shader "Interior Mapping (Object Space)"
 		float _CeilingsCount;
 		float _WallsCount;
         sampler2D _CeilingTex;
+        sampler2D _FloorTex;
         sampler2D _WallTex;
+		sampler2D _BackWallTex;
 
 		float4 _CeilingColor;
 		float4 _FloorColor;
@@ -111,7 +115,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = _CeilingColor * (ceilingPos + dc);
+					rayData.color = tex2D(_CeilingTex, hit.position.xz * _WallsCount) * _CeilingColor * (ceilingPos + dc);
 				}
 			}
 			else
@@ -121,7 +125,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = _FloorColor * (floorPos + dc * 2);
+					rayData.color = tex2D(_FloorTex, hit.position.xz * _WallsCount) * _FloorColor * (floorPos + dc * 2);
 				}
 			}
 
@@ -133,7 +137,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = _WallRightColor * (wallRightPos + dw);
+					rayData.color = tex2D(_WallTex, hit.position.yz * _CeilingsCount) * _WallRightColor * (wallRightPos + dw);
 				}
 			}
 			else
@@ -143,7 +147,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = _WallLeftColor * (wallLeftPos + dw * 2);
+					rayData.color = tex2D(_WallTex, hit.position.yz * _CeilingsCount) * _WallLeftColor * (wallLeftPos + dw * 2);
 				}
 			}
 
@@ -155,7 +159,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = _WallBackColor;
+					rayData.color = tex2D(_BackWallTex, hit.position.xy * _CeilingsCount) * _WallBackColor;
 				}
         	}
         	else
@@ -165,10 +169,12 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = _WallBackColor;
+					rayData.color = tex2D(_BackWallTex, hit.position.xy * _CeilingsCount) * _WallBackColor;
 				}
         	}
 
+        	rayData.color *= 2; // Multiplying by 2 for debugging/readability purpose.
+        	
 			o.Albedo = rayData.color;
 		}
 		
