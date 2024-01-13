@@ -54,11 +54,11 @@ Material:
     m_Ints: []
     m_Floats:
     - _CeilingInterval: 1
-    - _CeilingsCount: 4
+    - _CeilingsCount: 6
     - _CeilingsOffset: 0.5
     - _DbgRotation: 90
     - _Depth: 8.6
-    - _WallsCount: 4
+    - _WallsCount: 6
     m_Colors:
     - _CeilingColor: {r: 1, g: 0.18196456, b: 0, a: 1}
     - _ColorFloor: {r: 1, g: 0, b: 0, a: 1}

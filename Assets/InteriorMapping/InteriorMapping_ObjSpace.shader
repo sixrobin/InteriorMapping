@@ -137,7 +137,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_WallTex, hit.position.yz * _CeilingsCount) * _WallRightColor * (wallRightPos + dw);
+					rayData.color = tex2D(_WallTex, hit.position.yz * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount)) * _WallRightColor * (wallRightPos + dw);
 				}
 			}
 			else
@@ -147,7 +147,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_WallTex, hit.position.yz * _CeilingsCount) * _WallLeftColor * (wallLeftPos + dw * 2);
+					rayData.color = tex2D(_WallTex, hit.position.yz * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount)) * _WallLeftColor * (wallLeftPos + dw * 2);
 				}
 			}
 
@@ -159,7 +159,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_BackWallTex, hit.position.xy * _CeilingsCount) * _WallBackColor;
+					rayData.color = tex2D(_BackWallTex, hit.position.xy * float2(_WallsCount, _CeilingsCount)) * _WallBackColor;
 				}
         	}
         	else
@@ -169,7 +169,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_BackWallTex, hit.position.xy * _CeilingsCount) * _WallBackColor;
+					rayData.color = tex2D(_BackWallTex, hit.position.xy * float2(_WallsCount, _CeilingsCount)) * _WallBackColor;
 				}
         	}
 
