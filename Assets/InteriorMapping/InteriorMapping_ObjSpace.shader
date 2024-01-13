@@ -4,6 +4,15 @@ Shader "Interior Mapping (Object Space)"
 	{
 		_CeilingsCount ("Ceiling Count", Float) = 1
 		_WallsCount ("Walls Count", Float) = 1
+		_CeilingTex ("Ceiling Texture", 2D) = "white" {}
+        _WallTex ("Wall Texture", 2D) = "white" {}
+		
+        [Header(COLORS)]
+        _CeilingColor ("Ceiling Color", Color) = (1,1,1,1)
+        _FloorColor ("Floor Color", Color) = (1,1,1,1)
+        _WallRightColor ("Wall Right Color", Color) = (1,1,1,1)
+        _WallLeftColor ("Wall Left Color", Color) = (1,1,1,1)
+        _WallBackColor ("Wall Back Color", Color) = (1,1,1,1)
 	}
 	
 	SubShader 
@@ -41,6 +50,14 @@ Shader "Interior Mapping (Object Space)"
 
 		float _CeilingsCount;
 		float _WallsCount;
+        sampler2D _CeilingTex;
+        sampler2D _WallTex;
+
+		float4 _CeilingColor;
+		float4 _FloorColor;
+		float4 _WallRightColor;
+		float4 _WallLeftColor;
+		float4 _WallBackColor;
 
         RayPlaneIntersection rayToPlaneIntersection(float3 rayStart, float3 rayDirection, float3 planeNormal, float3 planePosition)
         {
@@ -90,36 +107,66 @@ Shader "Interior Mapping (Object Space)"
 			if (rayDirection.y > 0)
 			{
 				float ceilingPos = ceil(rayStart.y / dc) * dc;
-				raycast(rayDirection, rayStart, float3(0, ceilingPos, 0), UP, fixed4(ceilingPos + dc, 0, 0, 1), rayData);
+				RayPlaneIntersection hit = rayToPlaneIntersection(rayStart, rayDirection, UP, float3(0, ceilingPos, 0));
+				if (hit.distance < rayData.distance)
+				{
+					rayData.distance = hit.distance;
+					rayData.color = _CeilingColor * (ceilingPos + dc);
+				}
 			}
 			else
 			{
 				float floorPos = (ceil(rayStart.y / dc) - 1) * dc;
-				raycast(rayDirection, rayStart, float3(0, floorPos, 0), -UP, fixed4(0, 0, floorPos + dc * 2, 1), rayData);
+				RayPlaneIntersection hit = rayToPlaneIntersection(rayStart, rayDirection, -UP, float3(0, floorPos, 0));
+				if (hit.distance < rayData.distance)
+				{
+					rayData.distance = hit.distance;
+					rayData.color = _FloorColor * (floorPos + dc * 2);
+				}
 			}
 
 			// Left/Right.
 			if (rayDirection.x > 0)
 			{
 		        float wallRightPos = ceil(rayStart.x / dw) * dw;
-				raycast(rayDirection, rayStart, float3(wallRightPos, 0, 0), RIGHT, fixed4(0, wallRightPos + dw, 0, 1), rayData);
+				RayPlaneIntersection hit = rayToPlaneIntersection(rayStart, rayDirection, RIGHT, float3(wallRightPos, 0, 0));
+				if (hit.distance < rayData.distance)
+				{
+					rayData.distance = hit.distance;
+					rayData.color = _WallRightColor * (wallRightPos + dw);
+				}
 			}
 			else
 			{
 	            float wallLeftPos = (ceil(rayStart.x / dw) - 1) * dw;
-				raycast(rayDirection, rayStart, float3(wallLeftPos, 0, 0), -RIGHT, fixed4(wallLeftPos + dw * 2, wallLeftPos + dw * 2, 0, 1), rayData);
+				RayPlaneIntersection hit = rayToPlaneIntersection(rayStart, rayDirection, RIGHT, float3(wallLeftPos, 0, 0));
+				if (hit.distance < rayData.distance)
+				{
+					rayData.distance = hit.distance;
+					rayData.color = _WallLeftColor * (wallLeftPos + dw * 2);
+				}
 			}
 
         	// Back.
         	if (rayDirection.z > 0)
         	{
         		float backPos = ceil(rayStart.z / dw) * dw;
-	        	raycast(rayDirection, rayStart, float3(0, 0, backPos), -FORWARD, fixed4(1, 0, 1, 1), rayData);
+        		RayPlaneIntersection hit = rayToPlaneIntersection(rayStart, rayDirection, FORWARD, float3(0, 0, backPos));
+				if (hit.distance < rayData.distance)
+				{
+					rayData.distance = hit.distance;
+					rayData.color = _WallBackColor;
+				}
         	}
         	else
         	{
         		float backPos = ceil(rayStart.z / dw - 1) * dw;
-	        	raycast(rayDirection, rayStart, float3(0, 0, backPos), -FORWARD, fixed4(1, 0, 1, 1), rayData);
+        		RayPlaneIntersection hit = rayToPlaneIntersection(rayStart, rayDirection, -FORWARD, float3(0, 0, backPos));
+				if (hit.distance < rayData.distance)
+				{
+					rayData.distance = hit.distance;
+					rayData.color = _WallBackColor;
+				}
         	}
 
 			o.Albedo = rayData.color;
