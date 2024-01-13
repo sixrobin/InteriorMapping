@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: InteriorMapping
-  m_Shader: {fileID: 4800000, guid: 527d2ffd73a78c14f8b9c6c28643ada1, type: 3}
+  m_Name: InteriorMapping_ObjSpace
+  m_Shader: {fileID: 4800000, guid: 8328c16214d9f6b47bfd1041d1f49ea7, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -46,13 +46,17 @@ Material:
     m_Ints: []
     m_Floats:
     - _CeilingInterval: 1
-    - _CeilingsCount: 6
+    - _CeilingsCount: 4
     - _CeilingsOffset: 0.5
     - _DbgRotation: 90
-    - _Depth: 0.33333
-    - _WallsCount: 3
+    - _Depth: 0.5
+    - _WallsCount: 4
     m_Colors:
     - _CeilingColor: {r: 1, g: 1, b: 1, a: 1}
+    - _ColorFloor: {r: 1, g: 0, b: 0, a: 1}
+    - _ColorRoof: {r: 0.735849, g: 0.5384272, b: 0, a: 1}
+    - _ColorWall: {r: 0, g: 0.11324037, b: 0.754717, a: 1}
+    - _ColorWall2: {r: 0.45719042, g: 0.9245283, b: 0, a: 1}
     - _DebugPlaneNormal: {r: 0, g: 0, b: -1, a: 0}
     - _DebugPlanePosition: {r: 0, g: 0, b: 0, a: 0}
     - _DebugRayDirection: {r: 0, g: 0, b: 1, a: 0}

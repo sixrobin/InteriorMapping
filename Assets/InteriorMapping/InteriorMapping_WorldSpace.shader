@@ -1,4 +1,4 @@
-Shader "Interior Mapping"
+Shader "Interior Mapping (World Space)"
 {
     Properties
     {
@@ -49,7 +49,9 @@ Shader "Interior Mapping"
 
             struct v2f
             {
+                float3 position : TEXCOORD0;
                 float3 worldPos : TEXCOORD1;
+                float3 objectViewDir : TEXCOORD2;
                 float3 normal   : NORMAL;
                 float4 vertex   : SV_POSITION;
             };
@@ -102,9 +104,15 @@ Shader "Interior Mapping"
             v2f vert(appdata v)
             {
                 v2f o;
+
+                o.position = v.vertex;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex);
                 o.normal = v.normal;
+
+                float3 objectCameraPos = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos, 1)).xyz;
+                o.objectViewDir = o.position - objectCameraPos;
+                
                 return o;
             }
 
@@ -115,7 +123,6 @@ Shader "Interior Mapping"
                 // Handle odd walls and ceilings count.
                 float2 offset = float2(0.5 / _WallsCount * (_WallsCount % 2), 0.5 / _CeilingsCount * (_CeilingsCount % 2));
 
-                i.worldPos.xy += offset;
                 float3 cameraWorldPos = _WorldSpaceCameraPos + float3(offset, 0);
                 float3 cameraDirection = normalize(cameraWorldPos - i.worldPos);
 
