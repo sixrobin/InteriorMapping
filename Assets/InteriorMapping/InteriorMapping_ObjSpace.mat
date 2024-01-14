@@ -24,11 +24,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BackWallTex:
-        m_Texture: {fileID: 2800000, guid: af39e1b4a108f1646ae8fd899db04ec8, type: 3}
+        m_Texture: {fileID: 2800000, guid: 9ae90ae892aac0c4d8acadfb51f95425, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _CeilingTex:
-        m_Texture: {fileID: 2800000, guid: af39e1b4a108f1646ae8fd899db04ec8, type: 3}
+        m_Texture: {fileID: 2800000, guid: d619e7c605be95b4d8bbaf8d50cc63a6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Cube:
@@ -36,7 +36,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FloorTex:
-        m_Texture: {fileID: 2800000, guid: af39e1b4a108f1646ae8fd899db04ec8, type: 3}
+        m_Texture: {fileID: 2800000, guid: 0ab75589d9988944b8053099c5f0c8a6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -44,7 +44,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _WallTex:
-        m_Texture: {fileID: 2800000, guid: af39e1b4a108f1646ae8fd899db04ec8, type: 3}
+        m_Texture: {fileID: 2800000, guid: 9ae90ae892aac0c4d8acadfb51f95425, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _WindowTex:
@@ -60,7 +60,7 @@ Material:
     - _Depth: 8.6
     - _WallsCount: 4
     m_Colors:
-    - _CeilingColor: {r: 1, g: 0.18196456, b: 0, a: 1}
+    - _CeilingColor: {r: 1, g: 1, b: 1, a: 1}
     - _ColorFloor: {r: 1, g: 0, b: 0, a: 1}
     - _ColorRoof: {r: 0.735849, g: 0.5384272, b: 0, a: 1}
     - _ColorWall: {r: 0, g: 0.11324037, b: 0.754717, a: 1}
@@ -69,8 +69,8 @@ Material:
     - _DebugPlanePosition: {r: 0, g: 0, b: 0, a: 0}
     - _DebugRayDirection: {r: 0, g: 0, b: 1, a: 0}
     - _DebugRayStart: {r: 0, g: 0, b: -1, a: 0}
-    - _FloorColor: {r: 1, g: 0, b: 0.5694699, a: 1}
-    - _WallBackColor: {r: 0, g: 0.685781, b: 1, a: 1}
-    - _WallLeftColor: {r: 0.41388416, g: 1, b: 0, a: 1}
-    - _WallRightColor: {r: 1, g: 1, b: 0, a: 1}
+    - _FloorColor: {r: 1, g: 1, b: 1, a: 1}
+    - _WallBackColor: {r: 0.8490566, g: 0.8490566, b: 0.8490566, a: 1}
+    - _WallLeftColor: {r: 1, g: 1, b: 1, a: 1}
+    - _WallRightColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

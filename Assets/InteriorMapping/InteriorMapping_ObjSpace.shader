@@ -123,7 +123,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_CeilingTex, hit.position.xz * _WallsCount) * _CeilingColor * (ceilingPos + dc);
+					rayData.color = tex2D(_CeilingTex, hit.position.xz * _WallsCount) * _CeilingColor;
 				}
 			}
 			else
@@ -133,7 +133,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_FloorTex, hit.position.xz * _WallsCount) * _FloorColor * (floorPos + dc * 2);
+					rayData.color = tex2D(_FloorTex, hit.position.xz * _WallsCount) * _FloorColor;
 				}
 			}
 
@@ -145,7 +145,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_WallTex, hit.position.yz * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount)) * _WallRightColor * (wallRightPos + dw);
+					rayData.color = tex2D(_WallTex, hit.position.yz * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount)) * _WallRightColor;
 				}
 			}
 			else
@@ -155,7 +155,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_WallTex, hit.position.yz * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount)) * _WallLeftColor * (wallLeftPos + dw * 2);
+					rayData.color = tex2D(_WallTex, hit.position.yz * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount)) * _WallLeftColor;
 				}
 			}
 
@@ -181,12 +181,10 @@ Shader "Interior Mapping (Object Space)"
 				}
         	}
 
-        	rayData.color *= 2; // Multiplying by 2 for debugging/readability purpose.
-
             float4 windowColor = tex2D(_WindowTex, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount));
             float3 color = lerp(rayData.color, windowColor.rgb, windowColor.a);
         	
-			o.Albedo = color;
+			o.Albedo = saturate(color);
 		}
 		
 		ENDCG
