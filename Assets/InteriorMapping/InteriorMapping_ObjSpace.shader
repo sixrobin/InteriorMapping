@@ -97,8 +97,12 @@ Shader "Interior Mapping (Object Space)"
 		{
         	// https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
 
+        	float wallsOffset = 0.5 / _WallsCount * (_WallsCount % 2);
+        	float ceilingsOffset = 0.5 / _CeilingsCount * (_CeilingsCount % 2);
+        	float3 offset = float3(wallsOffset, ceilingsOffset, wallsOffset);
+        	
 			float3 rayDirection = normalize(i.objectViewDir);
-			float3 rayStart = i.localPosition + rayDirection * 0.0001;
+			float3 rayStart = (i.localPosition + offset) + rayDirection * 0.0001;
 
 			FragmentRayData rayData;
 			rayData.color = float3(1, 1, 1);

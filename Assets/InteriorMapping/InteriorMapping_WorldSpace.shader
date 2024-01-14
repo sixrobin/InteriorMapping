@@ -120,10 +120,9 @@ Shader "Interior Mapping (World Space)"
             {
                 // https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
 
-                // Handle odd walls and ceilings count.
-                float2 offset = float2(0.5 / _WallsCount * (_WallsCount % 2), 0.5 / _CeilingsCount * (_CeilingsCount % 2));
+                float2 oddDimensionsOffset = float2(0.5 / _WallsCount * (_WallsCount % 2), 0.5 / _CeilingsCount * (_CeilingsCount % 2));
 
-                float3 cameraWorldPos = _WorldSpaceCameraPos + float3(offset, 0);
+                float3 cameraWorldPos = _WorldSpaceCameraPos + float3(oddDimensionsOffset, 0);
                 float3 cameraDirection = normalize(cameraWorldPos - i.worldPos);
 
                 float3x3 yRot = rotation_matrix_y(_DbgRotation);
