@@ -11,6 +11,10 @@ Shader "Interior Mapping (Object Space)"
 		_FloorTex ("Floor Textures", 2DArray) = "" {}
         _WallTex ("Wall Texture", 2DArray) = "" {}
 		_WindowTex ("Window Texture", 2D) = "black" {}
+		_ShuttersTex ("Shutters Texture", 2D) = "black" {}
+
+		[Header(COLORS)]
+		_Shutters ("Shutters", Range(0, 1)) = 0.5
 
         [Header(COLORS)]
         _CeilingColor ("Ceiling Color", Color) = (1,1,1,1)
@@ -63,6 +67,9 @@ Shader "Interior Mapping (Object Space)"
         UNITY_DECLARE_TEX2DARRAY(_FloorTex);
         UNITY_DECLARE_TEX2DARRAY(_WallTex);
 		sampler2D _WindowTex;
+		sampler2D _ShuttersTex;
+
+		float _Shutters;
 
 		float4 _CeilingColor;
 		float4 _FloorColor;
@@ -186,7 +193,16 @@ Shader "Interior Mapping (Object Space)"
 
             float4 windowColor = tex2D(_WindowTex, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount));
             float3 color = lerp(rayData.color, windowColor.rgb, windowColor.a);
-        	
+
+			// TODO: Working pretty well, just need to make shutters fully open.
+			// Increase scroll speed based on UID, and clamp to a max scroll value?
+			float2 shuttersGradient = frac(i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)).xy;
+			float shuttersMask = _Shutters * roomUID;
+			float4 shuttersColor = tex2D(_ShuttersTex, shuttersGradient - float2(0, shuttersMask));
+			shuttersColor = lerp(shuttersColor, fixed4(0, 0, 0, 0), step(shuttersGradient.y, shuttersMask));
+
+			color = lerp(color, shuttersColor, (1 - windowColor.a) * shuttersColor.a);
+
 			o.Albedo = color;
 		}
 		
