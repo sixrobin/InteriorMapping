@@ -8,7 +8,8 @@ Shader "Interior Mapping (Object Space)"
 		_FloorTex ("Floor Texture", 2D) = "white" {}
         _WallTex ("Wall Texture", 2D) = "white" {}
         _BackWallTex ("Back Wall Texture", 2D) = "white" {}
-		
+		_WindowTex ("Window Texture", 2D) = "black" {}
+
         [Header(COLORS)]
         _CeilingColor ("Ceiling Color", Color) = (1,1,1,1)
         _FloorColor ("Floor Color", Color) = (1,1,1,1)
@@ -27,6 +28,7 @@ Shader "Interior Mapping (Object Space)"
 		CGPROGRAM
 
 		#pragma surface surf Standard vertex:vert
+		#pragma target 3.5
 		
 		#define RIGHT   float3(1, 0, 0)
 		#define UP      float3(0, 1, 0)
@@ -34,6 +36,7 @@ Shader "Interior Mapping (Object Space)"
 
 		struct Input 
 		{
+			float2 uv_WindowTex;
 			float3 objectViewDir;
 			float3 localPosition;
 		};
@@ -56,6 +59,7 @@ Shader "Interior Mapping (Object Space)"
         sampler2D _FloorTex;
         sampler2D _WallTex;
 		sampler2D _BackWallTex;
+		sampler2D _WindowTex;
 
 		float4 _CeilingColor;
 		float4 _FloorColor;
@@ -93,7 +97,7 @@ Shader "Interior Mapping (Object Space)"
 			o.localPosition = i.vertex;
 		}
 
-		void surf(Input i, inout SurfaceOutputStandard o) 
+		void surf(Input i, inout SurfaceOutputStandard o)
 		{
         	// https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
 
@@ -178,8 +182,11 @@ Shader "Interior Mapping (Object Space)"
         	}
 
         	rayData.color *= 2; // Multiplying by 2 for debugging/readability purpose.
+
+            float4 windowColor = tex2D(_WindowTex, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount));
+            float3 color = lerp(rayData.color, windowColor.rgb, windowColor.a);
         	
-			o.Albedo = rayData.color;
+			o.Albedo = color;
 		}
 		
 		ENDCG
