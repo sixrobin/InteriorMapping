@@ -2,12 +2,14 @@ Shader "Interior Mapping (Object Space)"
 {
     Properties 
 	{
+		[Header(DIMENSIONS)]
 		_CeilingsCount ("Ceiling Count", Float) = 1
 		_WallsCount ("Walls Count", Float) = 1
-		_CeilingTex ("Ceiling Texture", 2D) = "white" {}
-		_FloorTex ("Floor Texture", 2D) = "white" {}
-        _WallTex ("Wall Texture", 2D) = "white" {}
-        _BackWallTex ("Back Wall Texture", 2D) = "white" {}
+		
+		[Header(TEXTURES)]
+		_CeilingTex ("Ceiling Texture", 2DArray) = "" {}
+		_FloorTex ("Floor Textures", 2DArray) = "" {}
+        _WallTex ("Wall Texture", 2DArray) = "" {}
 		_WindowTex ("Window Texture", 2D) = "black" {}
 
         [Header(COLORS)]
@@ -28,11 +30,12 @@ Shader "Interior Mapping (Object Space)"
 		CGPROGRAM
 
 		#pragma surface surf Standard vertex:vert
+		#pragma require 2darray
 		#pragma target 3.5
-		
-		#define RIGHT   float3(1, 0, 0)
-		#define UP      float3(0, 1, 0)
-		#define FORWARD float3(0, 0, 1)
+
+		#define RIGHT            float3(1, 0, 0)
+		#define UP               float3(0, 1, 0)
+		#define FORWARD          float3(0, 0, 1)
 
 		struct Input 
 		{
@@ -55,10 +58,10 @@ Shader "Interior Mapping (Object Space)"
 
 		float _CeilingsCount;
 		float _WallsCount;
-        sampler2D _CeilingTex;
-        sampler2D _FloorTex;
-        sampler2D _WallTex;
-		sampler2D _BackWallTex;
+		
+        UNITY_DECLARE_TEX2DARRAY(_CeilingTex);
+        UNITY_DECLARE_TEX2DARRAY(_FloorTex);
+        UNITY_DECLARE_TEX2DARRAY(_WallTex);
 		sampler2D _WindowTex;
 
 		float4 _CeilingColor;
@@ -67,6 +70,11 @@ Shader "Interior Mapping (Object Space)"
 		float4 _WallLeftColor;
 		float4 _WallBackColor;
 
+		float2 random(float2 s)
+		{
+			return frac(sin(dot(s, float2(12.9898, 78.233))) * 43758.5453);
+		}
+		
         RayPlaneIntersection rayToPlaneIntersection(float3 rayStart, float3 rayDirection, float3 planeNormal, float3 planePosition)
         {
         	RayPlaneIntersection result;
@@ -77,16 +85,6 @@ Shader "Interior Mapping (Object Space)"
 
         	return result;
         }
-		
-		void raycast(float3 rayDirection, float3 rayStart, float3 planePosition, float3 planeNormal, float4 color, inout FragmentRayData currentRayData)
-		{
-			RayPlaneIntersection intersection = rayToPlaneIntersection(rayStart, rayDirection, planeNormal, planePosition);
-			if (intersection.distance < currentRayData.distance)
-			{
-				currentRayData.distance = intersection.distance;
-				currentRayData.color = color;
-			}
-		}
 		
 		void vert(inout appdata_full i, out Input o)
 		{
@@ -106,11 +104,16 @@ Shader "Interior Mapping (Object Space)"
         	float3 offset = float3(wallsOffset, ceilingsOffset, wallsOffset);
         	
 			float3 rayDirection = normalize(i.objectViewDir);
-			float3 rayStart = (i.localPosition + offset) + rayDirection * 0.0001;
+			float3 rayStart = i.localPosition + offset + rayDirection * 0.0001;
 
 			FragmentRayData rayData;
 			rayData.color = float3(1, 1, 1);
 			rayData.distance = 1e+64;
+
+        	float roomUID = random(ceil(i.uv_WindowTex.xy * float2(_WallsCount, _CeilingsCount)));
+			float ceilingTextureIndex = floor(roomUID * 2); // TODO: Find a way to get ceiling textures count dynamically.
+			float floorTextureIndex = floor(roomUID * 3); // TODO: Find a way to get floor textures count dynamically.
+			float wallTextureIndex = floor(roomUID * 2); // TODO: Find a way to get wall textures count dynamically.
 
         	float dc = 1.0 / _CeilingsCount;
 			float dw = 1.0 / _WallsCount;
@@ -123,7 +126,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_CeilingTex, hit.position.xz * _WallsCount) * _CeilingColor;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_CeilingTex, float3(hit.position.xz * _WallsCount, ceilingTextureIndex)) * _CeilingColor;
 				}
 			}
 			else
@@ -133,7 +136,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_FloorTex, hit.position.xz * _WallsCount) * _FloorColor;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_FloorTex, float3(hit.position.xz * _WallsCount, floorTextureIndex)).rgb * _FloorColor;
 				}
 			}
 
@@ -145,7 +148,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_WallTex, hit.position.yz * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount)) * _WallRightColor;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(hit.position.zy * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount), wallTextureIndex)).rgb * _WallRightColor;
 				}
 			}
 			else
@@ -155,7 +158,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_WallTex, hit.position.yz * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount)) * _WallLeftColor;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(hit.position.zy * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount), wallTextureIndex)).rgb * _WallLeftColor;;
 				}
 			}
 
@@ -167,7 +170,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_BackWallTex, hit.position.xy * float2(_WallsCount, _CeilingsCount)) * _WallBackColor;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(hit.position.xy * float2(_WallsCount, _CeilingsCount), wallTextureIndex)).rgb * _WallBackColor;
 				}
         	}
         	else
@@ -177,14 +180,14 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = tex2D(_BackWallTex, hit.position.xy * float2(_WallsCount, _CeilingsCount)) * _WallBackColor;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(hit.position.xy * float2(_WallsCount, _CeilingsCount), wallTextureIndex)).rgb * _WallBackColor;
 				}
         	}
 
             float4 windowColor = tex2D(_WindowTex, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount));
             float3 color = lerp(rayData.color, windowColor.rgb, windowColor.a);
         	
-			o.Albedo = saturate(color);
+			o.Albedo = color;
 		}
 		
 		ENDCG
