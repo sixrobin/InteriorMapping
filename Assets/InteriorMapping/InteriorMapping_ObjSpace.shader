@@ -37,9 +37,9 @@ Shader "Interior Mapping (Object Space)"
 		#pragma require 2darray
 		#pragma target 3.5
 
-		#define RIGHT            float3(1, 0, 0)
-		#define UP               float3(0, 1, 0)
-		#define FORWARD          float3(0, 0, 1)
+		#define RIGHT   float3(1, 0, 0)
+		#define UP      float3(0, 1, 0)
+		#define FORWARD float3(0, 0, 1)
 
 		struct Input 
 		{
@@ -80,6 +80,11 @@ Shader "Interior Mapping (Object Space)"
 		float2 random(float2 s)
 		{
 			return frac(sin(dot(s, float2(12.9898, 78.233))) * 43758.5453);
+		}
+
+		float Remap(float value, float from1, float to1, float from2, float to2)
+		{
+		    return (value - from1) / (to1 - from1) * (to2 - from2) + from2;
 		}
 		
         RayPlaneIntersection rayToPlaneIntersection(float3 rayStart, float3 rayDirection, float3 planeNormal, float3 planePosition)
@@ -194,12 +199,14 @@ Shader "Interior Mapping (Object Space)"
             float4 windowColor = tex2D(_WindowTex, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount));
             float3 color = lerp(rayData.color, windowColor.rgb, windowColor.a);
 
-			// TODO: Working pretty well, just need to make shutters fully open.
-			// Increase scroll speed based on UID, and clamp to a max scroll value?
+			// TODO: Right side of the cube has inverted V axis.
 			float2 shuttersGradient = frac(i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)).xy;
-			float shuttersMask = _Shutters * roomUID;
-			float4 shuttersColor = tex2D(_ShuttersTex, shuttersGradient - float2(0, shuttersMask));
-			shuttersColor = lerp(shuttersColor, fixed4(0, 0, 0, 0), step(shuttersGradient.y, shuttersMask));
+			float shuttersScroll = _Shutters + _Shutters * roomUID;
+			shuttersScroll = Remap(shuttersScroll, 0, 1, 0.15, 0.85); // Remap from cell bounds to window bounds.
+			float4 shuttersColor = tex2D(_ShuttersTex, shuttersGradient - float2(0, shuttersScroll));
+			shuttersColor = lerp(shuttersColor, 0, step(shuttersGradient.y, shuttersScroll));
+
+			// TODO: Reduce room light based on shutter opening.
 
 			color = lerp(color, shuttersColor, (1 - windowColor.a) * shuttersColor.a);
 
