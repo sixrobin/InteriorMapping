@@ -44,6 +44,7 @@ Shader "Interior Mapping (Object Space)"
 		#pragma target 3.5
 
 		#include "Assets/CGInc/Easing.cginc"
+		#include "Assets/CGInc/Maths.cginc"
 
 		#define RIGHT   float3(1, 0, 0)
 		#define UP      float3(0, 1, 0)
@@ -94,11 +95,6 @@ Shader "Interior Mapping (Object Space)"
 		{
 			return frac(sin(dot(s, float2(12.9898, 78.233))) * 43758.5453);
 		}
-
-		float Remap(float value, float from1, float to1, float from2, float to2)
-		{
-		    return (value - from1) / (to1 - from1) * (to2 - from2) + from2;
-		}
 		
         RayPlaneIntersection rayToPlaneIntersection(float3 rayStart, float3 rayDirection, float3 planeNormal, float3 planePosition)
         {
@@ -142,6 +138,7 @@ Shader "Interior Mapping (Object Space)"
 
         	float dc = 1.0 / _CeilingsCount;
 			float dw = 1.0 / _WallsCount;
+			// TODO: Disable interior mapping for 1st floor (or n first floor, based on a slider/int value).
 
 			// Ceiling/Floor.
 			if (rayDirection.y > 0)
