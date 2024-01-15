@@ -1,6 +1,3 @@
 - Interior texturing.
-- Fix quad rotation not working.
 - Windows reflection/refraction.
-- Automatic depth based on rows/columns.
-- Depth Min/Max.
-- Randomize Open/Close window (based on a slider?).
+- Fix right side of the Unity's cube that has inverted UV.

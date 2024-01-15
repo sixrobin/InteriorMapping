@@ -15,6 +15,7 @@ Shader "Interior Mapping (Object Space)"
 
 		[Header(COLORS)]
 		_Shutters ("Shutters", Range(0, 1)) = 0.5
+		_ClosedShutters ("Closed Shutters", Range(0, 1)) = 0
 
         [Header(COLORS)]
         _CeilingColor ("Ceiling Color", Color) = (1,1,1,1)
@@ -36,6 +37,8 @@ Shader "Interior Mapping (Object Space)"
 		#pragma surface surf Standard vertex:vert
 		#pragma require 2darray
 		#pragma target 3.5
+
+		#include "Assets/CGInc/Easing.cginc"
 
 		#define RIGHT   float3(1, 0, 0)
 		#define UP      float3(0, 1, 0)
@@ -70,6 +73,7 @@ Shader "Interior Mapping (Object Space)"
 		sampler2D _ShuttersTex;
 
 		float _Shutters;
+		float _ClosedShutters;
 
 		float4 _CeilingColor;
 		float4 _FloorColor;
@@ -196,18 +200,18 @@ Shader "Interior Mapping (Object Space)"
 				}
         	}
 
+			// Shutters.
+			_Shutters = (1 - _Shutters) * step(_ClosedShutters, roomUID);
+			float shutterPercentage01 = _Shutters + _Shutters * roomUID;
+			float shutterPercentageRemapped = Remap(shutterPercentage01, 0, 1, 0.15, 0.85); // Remap from cell bounds to window bounds.
+			float2 shuttersGradient = frac(i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)).xy;
+			float4 shuttersColor = tex2D(_ShuttersTex, shuttersGradient - float2(0, shutterPercentageRemapped));
+			shuttersColor = lerp(shuttersColor, 0, step(shuttersGradient.y, shutterPercentageRemapped));
+			rayData.color *= OutQuad(saturate(shutterPercentage01 + _Shutters * roomUID)); // Reduce room light based on shutter opening.
+
+			// Final color computation.
             float4 windowColor = tex2D(_WindowTex, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount));
             float3 color = lerp(rayData.color, windowColor.rgb, windowColor.a);
-
-			// TODO: Right side of the cube has inverted V axis.
-			float2 shuttersGradient = frac(i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)).xy;
-			float shuttersScroll = _Shutters + _Shutters * roomUID;
-			shuttersScroll = Remap(shuttersScroll, 0, 1, 0.15, 0.85); // Remap from cell bounds to window bounds.
-			float4 shuttersColor = tex2D(_ShuttersTex, shuttersGradient - float2(0, shuttersScroll));
-			shuttersColor = lerp(shuttersColor, 0, step(shuttersGradient.y, shuttersScroll));
-
-			// TODO: Reduce room light based on shutter opening.
-
 			color = lerp(color, shuttersColor, (1 - windowColor.a) * shuttersColor.a);
 
 			o.Albedo = color;

@@ -60,9 +60,10 @@ Material:
     - _CeilingInterval: 1
     - _CeilingsCount: 6
     - _CeilingsOffset: 0.5
+    - _ClosedShutters: 0.25
     - _DbgRotation: 90
     - _Depth: 8.6
-    - _Shutters: 0.5
+    - _Shutters: 0.59
     - _WallsCount: 6
     m_Colors:
     - _CeilingColor: {r: 1, g: 1, b: 1, a: 1}
