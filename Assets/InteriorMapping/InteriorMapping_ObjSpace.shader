@@ -13,7 +13,11 @@ Shader "Interior Mapping (Object Space)"
 		_WindowTex ("Window Texture", 2D) = "black" {}
 		_ShuttersTex ("Shutters Texture", 2D) = "black" {}
 
-		[Header(COLORS)]
+		[Header(ROOMS LIGHTING)]
+		_LitRooms ("Lit Rooms", Range(0, 1)) = 0.5
+		_RoomLightColor ("Room Light Color", Color) = (1, 1, 0.25, 1)
+		
+		[Header(SHUTTERS)]
 		_Shutters ("Shutters", Range(0, 1)) = 0.5
 		_ClosedShutters ("Closed Shutters", Range(0, 1)) = 0
 
@@ -23,6 +27,7 @@ Shader "Interior Mapping (Object Space)"
         _WallRightColor ("Wall Right Color", Color) = (1,1,1,1)
         _WallLeftColor ("Wall Left Color", Color) = (1,1,1,1)
         _WallBackColor ("Wall Back Color", Color) = (1,1,1,1)
+        _WindowColor ("Window Color", Color) = (1,1,1,0)
 	}
 	
 	SubShader 
@@ -75,11 +80,15 @@ Shader "Interior Mapping (Object Space)"
 		float _Shutters;
 		float _ClosedShutters;
 
+		float _LitRooms;
+		float4 _RoomLightColor;
+
 		float4 _CeilingColor;
 		float4 _FloorColor;
 		float4 _WallRightColor;
 		float4 _WallLeftColor;
 		float4 _WallBackColor;
+		float4 _WindowColor;
 
 		float2 random(float2 s)
 		{
@@ -200,6 +209,11 @@ Shader "Interior Mapping (Object Space)"
 				}
         	}
 
+			// Room lighting.
+			_LitRooms = 1 - _LitRooms;
+			float lit = step(_LitRooms, 1 - roomUID); // (1 - UID) to avoid using same random for both lighting and shutters.
+			rayData.color.rgb = saturate(rayData.color.rgb + _RoomLightColor * lit * _RoomLightColor.a);
+
 			// Shutters.
 			_Shutters = (1 - _Shutters) * step(_ClosedShutters, roomUID);
 			float shutterPercentage01 = _Shutters + _Shutters * roomUID;
@@ -207,12 +221,14 @@ Shader "Interior Mapping (Object Space)"
 			float2 shuttersGradient = frac(i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)).xy;
 			float4 shuttersColor = tex2D(_ShuttersTex, shuttersGradient - float2(0, shutterPercentageRemapped));
 			shuttersColor = lerp(shuttersColor, 0, step(shuttersGradient.y, shutterPercentageRemapped));
-			rayData.color *= OutQuad(saturate(shutterPercentage01 + _Shutters * roomUID)); // Reduce room light based on shutter opening.
-
+			if (lit == 0)
+				rayData.color.rgb *= OutQuad(saturate(shutterPercentage01 + _Shutters * roomUID)); // Reduce unlit room light based on shutter opening.
+			
 			// Final color computation.
             float4 windowColor = tex2D(_WindowTex, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount));
             float3 color = lerp(rayData.color, windowColor.rgb, windowColor.a);
 			color = lerp(color, shuttersColor, (1 - windowColor.a) * shuttersColor.a);
+			color = lerp(color, _WindowColor, (1 - windowColor.a) * (1 - shuttersColor.a) * _WindowColor.a);
 
 			o.Albedo = color;
 		}

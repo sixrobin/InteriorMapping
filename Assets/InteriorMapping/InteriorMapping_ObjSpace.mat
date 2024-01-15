@@ -60,10 +60,11 @@ Material:
     - _CeilingInterval: 1
     - _CeilingsCount: 6
     - _CeilingsOffset: 0.5
-    - _ClosedShutters: 0.25
+    - _ClosedShutters: 0.17
     - _DbgRotation: 90
     - _Depth: 8.6
-    - _Shutters: 0.59
+    - _LitRooms: 0.61
+    - _Shutters: 0.8
     - _WallsCount: 6
     m_Colors:
     - _CeilingColor: {r: 1, g: 1, b: 1, a: 1}
@@ -76,7 +77,9 @@ Material:
     - _DebugRayDirection: {r: 0, g: 0, b: 1, a: 0}
     - _DebugRayStart: {r: 0, g: 0, b: -1, a: 0}
     - _FloorColor: {r: 1, g: 1, b: 1, a: 1}
+    - _RoomLightColor: {r: 1, g: 0.38698348, b: 0.1745283, a: 1}
     - _WallBackColor: {r: 1, g: 1, b: 1, a: 1}
     - _WallLeftColor: {r: 1, g: 1, b: 1, a: 1}
     - _WallRightColor: {r: 1, g: 1, b: 1, a: 1}
+    - _WindowColor: {r: 0.39279994, g: 0.8584906, b: 0.7366375, a: 0.18431373}
   m_BuildTextureStacks: []
