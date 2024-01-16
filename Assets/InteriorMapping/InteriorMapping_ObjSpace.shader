@@ -58,6 +58,7 @@ Shader "Interior Mapping (Object Space)"
 			float2 uv_WindowTex;
 			float3 objectViewDir;
 			float3 localPosition;
+			float3 normal : NORMAL;
 		};
 
 		struct FragmentRayData
@@ -120,9 +121,11 @@ Shader "Interior Mapping (Object Space)"
 		{
 			UNITY_INITIALIZE_OUTPUT(Input, o);
 
+			o.localPosition = i.vertex;
+			o.normal = i.normal;
+
 			float3 objectSpaceCameraPos = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos, 1)).xyz;
 			o.objectViewDir = i.vertex - objectSpaceCameraPos;
-			o.localPosition = i.vertex;
 		}
 
 		void surf(Input i, inout SurfaceOutputStandard o)
@@ -142,7 +145,8 @@ Shader "Interior Mapping (Object Space)"
 
 			float3 outsideWallColor = tex2D(_OutsideWallTex, uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * float2(_WallsCount, _CeilingsCount));
 			float floorIndex = floor(i.uv_WindowTex.y * _CeilingsCount);
-			if (floorIndex < _IgnoredFloorsCount)
+			float roof = dot(i.normal, UP);
+			if (floorIndex < _IgnoredFloorsCount || roof)
 			{
 				o.Albedo = outsideWallColor;
 				return;
