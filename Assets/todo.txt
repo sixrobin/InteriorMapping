@@ -1,4 +1,4 @@
-- Windows reflection/refraction.
+- Windows refraction.
 - No windows on first row, but some doors instead.
 - No interior mapping below and above building (if above, find another thing than windows).
 - Normal map, lighting, etc.
