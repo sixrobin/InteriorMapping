@@ -130,8 +130,6 @@ Shader "Interior Mapping (Object Space)"
 
 		void surf(Input i, inout SurfaceOutputStandard o)
 		{
-        	// https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
-
         	float wallsOffset = 0.5 / _WallsCount * (_WallsCount % 2);
         	float ceilingsOffset = 0.5 / _CeilingsCount * (_CeilingsCount % 2);
         	float3 offset = float3(wallsOffset, ceilingsOffset, wallsOffset);
@@ -156,7 +154,8 @@ Shader "Interior Mapping (Object Space)"
 			float ceilingTextureIndex = floor(roomUID * 2); // TODO: Find a way to get ceiling textures count dynamically.
 			float floorTextureIndex = floor(roomUID * 3); // TODO: Find a way to get floor textures count dynamically.
 			float wallTextureIndex = floor(roomUID * 2); // TODO: Find a way to get wall textures count dynamically.
-			
+
+			// https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
         	float dc = 1.0 / _CeilingsCount;
 			float dw = 1.0 / _WallsCount;
 

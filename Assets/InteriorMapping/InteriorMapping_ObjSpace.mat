@@ -45,7 +45,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _OutsideWallTex:
         m_Texture: {fileID: 2800000, guid: 79e82aba4f4c06d4b95744c948a6df8a, type: 3}
-        m_Scale: {x: 2, y: 2}
+        m_Scale: {x: 3, y: 2}
         m_Offset: {x: 0, y: 0}
     - _ShuttersTex:
         m_Texture: {fileID: 2800000, guid: 73f6f1de58a0cfd4fa2e8be5fff37c6c, type: 3}
@@ -62,16 +62,16 @@ Material:
     m_Ints: []
     m_Floats:
     - _CeilingInterval: 1
-    - _CeilingsCount: 10
+    - _CeilingsCount: 8
     - _CeilingsOffset: 0.5
-    - _ClosedShutters: 0.17
+    - _ClosedShutters: 0.196
     - _DbgRotation: 90
     - _Depth: 8.6
     - _IgnoreCeilingCount: 1
     - _IgnoredFloorsCount: 1
-    - _LitRooms: 0.45
-    - _Shutters: 0.51
-    - _WallsCount: 5
+    - _LitRooms: 0.382
+    - _Shutters: 0.657
+    - _WallsCount: 4
     m_Colors:
     - _CeilingColor: {r: 1, g: 1, b: 1, a: 1}
     - _ColorFloor: {r: 1, g: 0, b: 0, a: 1}
