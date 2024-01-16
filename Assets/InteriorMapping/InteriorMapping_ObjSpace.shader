@@ -223,10 +223,8 @@ Shader "Interior Mapping (Object Space)"
         	}
 
 			// Room lighting.
-			_LitRooms = 1 - _LitRooms;
-			float lit = step(_LitRooms, 1 - roomUID); // (1 - UID) to avoid using same random for both lighting and shutters.
-			rayData.color.rgb = saturate(rayData.color.rgb + _RoomLightColor * lit * _RoomLightColor.a);
-
+			float lit = step(1 - _LitRooms, 1 - roomUID); // (1 - UID) to avoid using same random for both lighting and shutters.
+			
 			// Shutters.
 			_Shutters = (1 - _Shutters) * step(_ClosedShutters, roomUID);
 			float shutterPercentage01 = _Shutters + _Shutters * roomUID;
@@ -245,8 +243,9 @@ Shader "Interior Mapping (Object Space)"
             color = lerp(color, rayData.color, windowGlassMask);
 			color = lerp(color, shuttersColor, windowGlassMask * shuttersColor.a);
 			color = lerp(color, _WindowGlassColor, windowGlassMask * (1 - shuttersColor.a) * _WindowGlassColor.a);
-			
+
 			o.Albedo = color;
+			o.Emission = _RoomLightColor * _RoomLightColor.a * lit * windowGlassMask * (1 - shuttersColor.a);
 			o.Smoothness = windowGlassMask;
 		}
 		
