@@ -3,8 +3,9 @@ Shader "Interior Mapping (Object Space)"
     Properties 
 	{
 		[Header(DIMENSIONS)]
-		_CeilingsCount ("Ceiling Count", Float) = 1
-		_WallsCount ("Walls Count", Float) = 1
+		_CeilingsCount ("Ceiling Count", Float) = 4
+		_WallsCount ("Walls Count", Float) = 4
+		_IgnoreCeilingCount ("Ignored Ceiling Count", Float) = 1
 		
 		[Header(TEXTURES)]
 		_CeilingTex ("Ceiling Texture", 2DArray) = "" {}
@@ -12,6 +13,7 @@ Shader "Interior Mapping (Object Space)"
         _WallTex ("Wall Texture", 2DArray) = "" {}
 		_WindowTex ("Window Texture", 2D) = "black" {}
 		_ShuttersTex ("Shutters Texture", 2D) = "black" {}
+		_OutsideWallTex ("Outside Wall Texture", 2D) = "white" {}
 
 		[Header(ROOMS LIGHTING)]
 		_LitRooms ("Lit Rooms", Range(0, 1)) = 0.5
@@ -27,7 +29,7 @@ Shader "Interior Mapping (Object Space)"
         _WallRightColor ("Wall Right Color", Color) = (1,1,1,1)
         _WallLeftColor ("Wall Left Color", Color) = (1,1,1,1)
         _WallBackColor ("Wall Back Color", Color) = (1,1,1,1)
-        _WindowColor ("Window Color", Color) = (1,1,1,0)
+        _WindowGlassColor ("Window Color", Color) = (1,1,1,0)
 	}
 	
 	SubShader 
@@ -39,7 +41,7 @@ Shader "Interior Mapping (Object Space)"
 		
 		CGPROGRAM
 
-		#pragma surface surf Standard vertex:vert
+		#pragma surface surf Standard vertex:vert addshadow
 		#pragma require 2darray
 		#pragma target 3.5
 
@@ -71,12 +73,15 @@ Shader "Interior Mapping (Object Space)"
 
 		float _CeilingsCount;
 		float _WallsCount;
+		float _IgnoreCeilingCount;
 		
         UNITY_DECLARE_TEX2DARRAY(_CeilingTex);
         UNITY_DECLARE_TEX2DARRAY(_FloorTex);
         UNITY_DECLARE_TEX2DARRAY(_WallTex);
 		sampler2D _WindowTex;
 		sampler2D _ShuttersTex;
+		sampler2D _OutsideWallTex;
+		float4 _OutsideWallTex_ST;
 
 		float _Shutters;
 		float _ClosedShutters;
@@ -89,7 +94,7 @@ Shader "Interior Mapping (Object Space)"
 		float4 _WallRightColor;
 		float4 _WallLeftColor;
 		float4 _WallBackColor;
-		float4 _WindowColor;
+		float4 _WindowGlassColor;
 
 		float2 random(float2 s)
 		{
@@ -222,11 +227,14 @@ Shader "Interior Mapping (Object Space)"
 				rayData.color.rgb *= OutQuad(saturate(shutterPercentage01 + _Shutters * roomUID)); // Reduce unlit room light based on shutter opening.
 			
 			// Final color computation.
+			float3 color = tex2D(_OutsideWallTex, (i.uv_WindowTex * _OutsideWallTex_ST.xy + _OutsideWallTex_ST.zw) * float2(_WallsCount, _CeilingsCount));
             float4 windowColor = tex2D(_WindowTex, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount));
-            float3 color = lerp(rayData.color, windowColor.rgb, windowColor.a);
-			color = lerp(color, shuttersColor, (1 - windowColor.a) * shuttersColor.a);
-			color = lerp(color, _WindowColor, (1 - windowColor.a) * (1 - shuttersColor.a) * _WindowColor.a);
-
+			float windowGlassMask = saturate(windowColor.a - smoothstep(0, 0.5, Luminance(windowColor.rgb)));
+			color = lerp(color, windowColor.rgb, windowColor.a - windowGlassMask);
+            color = lerp(color, rayData.color, windowGlassMask);
+			color = lerp(color, shuttersColor, windowGlassMask * shuttersColor.a);
+			color = lerp(color, _WindowGlassColor, windowGlassMask * (1 - shuttersColor.a) * _WindowGlassColor.a);
+			
 			o.Albedo = color;
 		}
 		
