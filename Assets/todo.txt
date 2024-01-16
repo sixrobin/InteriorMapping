@@ -1,7 +1,6 @@
 - Windows reflection/refraction.
-- Fix right side of the Unity's cube that has inverted UV.
-- Little issue when lighting a room: a dark line between window and shutter seem to disappear.
 - No windows on first row, but some doors instead.
 - No interior mapping below and above building (if above, find another thing than windows).
 - Normal map, lighting, etc.
 - Custom textures (pixel art? hand painted?).
+- Fix different texture size between left/right walls and back wall.
