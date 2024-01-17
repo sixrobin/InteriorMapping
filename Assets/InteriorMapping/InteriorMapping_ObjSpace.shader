@@ -8,13 +8,26 @@ Shader "Interior Mapping (Object Space)"
 		_IgnoredFloorsCount ("Ignored Floors Count", Float) = 1
 		
 		[Header(TEXTURES)]
-		_CeilingTex ("Ceiling Texture", 2DArray) = "" {}
-		_FloorTex ("Floor Textures", 2DArray) = "" {}
-        _WallTex ("Wall Texture", 2DArray) = "" {}
-		[NoScaleOffset] _WindowTex ("Window Texture", 2D) = "black" {}
-		_ShuttersTex ("Shutters Texture", 2D) = "black" {}
-		_OutsideWallTex ("Outside Wall Texture", 2D) = "white" {}
+		_CeilingTex ("Ceiling", 2DArray) = "" {}
+		_FloorTex ("Floor", 2DArray) = "" {}
+        _WallTex ("Wall", 2DArray) = "" {}
+		[NoScaleOffset] _WindowTex ("Window", 2D) = "black" {}
+		_ShuttersTex ("Shutters", 2D) = "black" {}
+		_OutsideWallTex ("Outside Wall", 2D) = "white" {}
+		_OutsideWallDamage ("Outside Wall Damage", 2D) = "white" {}
+		_OutsideWallDamageMask ("Outside Wall Damage Mask", 2D) = "black" {}
+		_BottomBricksTex ("Bottom Bricks", 2D) = "black" {}
 
+		[Header(BRICKS DAMAGE)]
+		_BricksDamageMin ("Bricks Damage Min", Range(0, 1)) = 0
+		_BricksDamageMax ("Bricks Damage Max", Range(0, 1)) = 0
+		_BricksDamageNoise ("Bricks Damage Noise", 2D) = "black" {}
+		_BricksDamageNoiseIntensity ("Bricks Damage Noise Intensity", Range(0, 1)) = 0
+		_BricksDamageBottom ("Bricks Damage Bottom", Range(0, 1)) = 0
+
+		[Header(BOTTOM BRICKS)]
+		_BottomBricksHeight ("Bottom Bricks Height", Range(0, 1)) = 0.1
+		
 		[Header(ROOMS LIGHTING)]
 		_LitRooms ("Lit Rooms", Range(0, 1)) = 0.5
 		_RoomLightColor ("Room Light Color", Color) = (1, 1, 0.25, 1)
@@ -87,10 +100,23 @@ Shader "Interior Mapping (Object Space)"
 		sampler2D _ShuttersTex;
 		sampler2D _OutsideWallTex;
 		float4 _OutsideWallTex_ST;
+		sampler2D _OutsideWallDamage;
+		float4 _OutsideWallDamage_ST;
+		sampler2D _OutsideWallDamageMask;
+		float4 _OutsideWallDamageMask_ST;
+		sampler2D _BottomBricksTex;
+		float4 _BottomBricksTex_ST;
 
+		sampler2D _BricksDamageNoise;
+		float4 _BricksDamageNoise_ST;
+		float _BricksDamageNoiseIntensity; 
+		float _BricksDamageMin;
+		float _BricksDamageMax;
+		float _BricksDamageBottom;
+		
+		float _BottomBricksHeight;
 		float _Shutters;
 		float _ClosedShutters;
-
 		float _LitRooms;
 		float4 _RoomLightColor;
 
@@ -141,14 +167,9 @@ Shader "Interior Mapping (Object Space)"
 			rayData.color = float3(1, 1, 1);
 			rayData.distance = 1e+64;
 
-			float3 outsideWallColor = tex2D(_OutsideWallTex, uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * float2(_WallsCount, _CeilingsCount));
 			float floorIndex = floor(i.uv_WindowTex.y * _CeilingsCount);
 			float roof = dot(i.normal, UP);
-			if (floorIndex < _IgnoredFloorsCount || roof)
-			{
-				o.Albedo = outsideWallColor;
-				return;
-			}
+			float discardInterior = floorIndex < _IgnoredFloorsCount || roof;
 			
         	float roomUID = random(ceil(i.uv_WindowTex.xy * float2(_WallsCount, _CeilingsCount)));
 			float ceilingTextureIndex = floor(roomUID * 2); // TODO: Find a way to get ceiling textures count dynamically.
@@ -238,6 +259,20 @@ Shader "Interior Mapping (Object Space)"
 			if (lit == 0)
 				rayData.color.rgb *= OutQuad(saturate(shutterPercentage01 + _Shutters * roomUID)); // Reduce unlit room light based on shutter opening.
 			
+			// Outside wall color.
+			float3 outsideWallColor = tex2D(_OutsideWallTex, uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * float2(_WallsCount, _CeilingsCount));
+			// Bricks damage.
+			float3 outsideWallDamageColor = tex2D(_OutsideWallDamage, uv_ST(i.uv_WindowTex, _OutsideWallDamage_ST) * float2(_WallsCount, _CeilingsCount));
+			float outsideWallDamageMask = tex2D(_OutsideWallDamageMask, uv_ST(i.uv_WindowTex, _OutsideWallDamageMask_ST) * float2(_WallsCount, _CeilingsCount));
+			outsideWallDamageMask = smoothstep(_BricksDamageMin, _BricksDamageMax, outsideWallDamageMask);
+			float bricksDamageNoise = (tex2D(_BricksDamageNoise, uv_ST(i.uv_WindowTex, _BricksDamageNoise_ST)) * 2 - 1) * _BricksDamageNoiseIntensity;
+			outsideWallDamageMask += step(i.uv_WindowTex.y + bricksDamageNoise, _BricksDamageBottom * (1 - roof));
+			outsideWallColor = lerp(outsideWallColor, outsideWallDamageColor, saturate(outsideWallDamageMask));
+			// Bottom bricks.
+			float3 bottomBricksColor = tex2D(_BottomBricksTex, uv_ST(i.uv_WindowTex, _BottomBricksTex_ST));
+			float bottomBricksMask = step(i.uv_WindowTex.y, _BottomBricksHeight) * (1 - roof);
+			outsideWallColor = lerp(outsideWallColor, bottomBricksColor, bottomBricksMask);
+
 			// Final color computation.
 			float3 color = outsideWallColor;
             float4 windowColor = tex2D(_WindowTex, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount));
@@ -247,9 +282,9 @@ Shader "Interior Mapping (Object Space)"
 			color = lerp(color, shuttersColor, windowGlassMask * shuttersColor.a);
 			color = lerp(color, _WindowGlassColor, windowGlassMask * (1 - shuttersColor.a) * _WindowGlassColor.a);
 
-			o.Albedo = color;
-			o.Emission = _RoomLightColor * _RoomLightColor.a * lit * windowGlassMask * (1 - shuttersColor.a);
-			o.Smoothness = windowGlassMask;
+			o.Albedo = discardInterior ? outsideWallColor : color;
+			o.Emission = discardInterior ? 0 : _RoomLightColor * _RoomLightColor.a * lit * windowGlassMask * (1 - shuttersColor.a);
+			o.Smoothness = discardInterior ? 0 : windowGlassMask;
 		}
 		
 		ENDCG
