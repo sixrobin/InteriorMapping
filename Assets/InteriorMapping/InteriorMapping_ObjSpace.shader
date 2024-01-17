@@ -12,11 +12,14 @@ Shader "Interior Mapping (Object Space)"
 		_FloorTex ("Floor", 2DArray) = "" {}
         _WallTex ("Wall", 2DArray) = "" {}
 		[NoScaleOffset] _WindowTex ("Window", 2D) = "black" {}
+		[Normal] [NoScaleOffset] _WindowNormal ("Window Normal", 2D) = "bump" {}
 		_ShuttersTex ("Shutters", 2D) = "black" {}
 		_OutsideWallTex ("Outside Wall", 2D) = "white" {}
+		[Normal] [NoScaleOffset] _OutsideWallNormal ("Outside Wall Normal", 2D) = "bump" {}
 		_OutsideWallDamage ("Outside Wall Damage", 2D) = "white" {}
 		_OutsideWallDamageMask ("Outside Wall Damage Mask", 2D) = "black" {}
 		_BottomBricksTex ("Bottom Bricks", 2D) = "black" {}
+		[Normal] [NoScaleOffset] _BottomBricksNormal ("Bottom Bricks Normal", 2D) = "bump" {}
 
 		[Header(BRICKS DAMAGE)]
 		_BricksDamageMin ("Bricks Damage Min", Range(0, 1)) = 0
@@ -97,14 +100,17 @@ Shader "Interior Mapping (Object Space)"
         UNITY_DECLARE_TEX2DARRAY(_WallTex);
 		float4 _WallTex_ST;
 		sampler2D _WindowTex;
+		sampler2D _WindowNormal;
 		sampler2D _ShuttersTex;
 		sampler2D _OutsideWallTex;
 		float4 _OutsideWallTex_ST;
+		sampler2D _OutsideWallNormal;
 		sampler2D _OutsideWallDamage;
 		float4 _OutsideWallDamage_ST;
 		sampler2D _OutsideWallDamageMask;
 		float4 _OutsideWallDamageMask_ST;
 		sampler2D _BottomBricksTex;
+		sampler2D _BottomBricksNormal;
 		float4 _BottomBricksTex_ST;
 
 		sampler2D _BricksDamageNoise;
@@ -282,7 +288,17 @@ Shader "Interior Mapping (Object Space)"
 			color = lerp(color, shuttersColor, windowGlassMask * shuttersColor.a);
 			color = lerp(color, _WindowGlassColor, windowGlassMask * (1 - shuttersColor.a) * _WindowGlassColor.a);
 
+			// Normal computation.
+			float3 outsideWallNormal = UnpackNormal(tex2D(_OutsideWallNormal, uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * float2(_WallsCount, _CeilingsCount)));
+			float3 bottomBricksNormal = UnpackNormal(tex2D(_BottomBricksNormal, uv_ST(i.uv_WindowTex, _BottomBricksTex_ST)));
+			float3 windowNormal = UnpackNormal(tex2D(_WindowNormal, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)));
+			outsideWallNormal.xy *= (1 - windowColor.a) * (1 - bottomBricksMask);
+			bottomBricksNormal.xy *= bottomBricksNormal * bottomBricksMask;
+			windowNormal.xy *= windowColor.a * windowGlassMask * (1 - bottomBricksMask);
+			float3 normal = saturate(outsideWallNormal + bottomBricksNormal + windowNormal);
+			
 			o.Albedo = discardInterior ? outsideWallColor : color;
+			o.Normal = saturate(normal);
 			o.Emission = discardInterior ? 0 : _RoomLightColor * _RoomLightColor.a * lit * windowGlassMask * (1 - shuttersColor.a);
 			o.Smoothness = discardInterior ? 0 : windowGlassMask;
 		}

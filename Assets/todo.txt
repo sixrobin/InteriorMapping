@@ -1,5 +1,4 @@
-- Windows refraction.
-- Doors on first floor.
-- Normal map.
+- Windows refraction. Probably want to refract the ray direction?
+- Doors on first floor. Pushed inside the wall using interior mapping too?
 - Custom textures (pixel art? hand painted?).
 - Fix different texture size between left/right walls and back wall.

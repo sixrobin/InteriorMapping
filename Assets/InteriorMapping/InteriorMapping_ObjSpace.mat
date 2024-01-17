@@ -19,7 +19,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties: 
+  m_LockedProperties: _OutsideWallDamageMask
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -27,9 +27,17 @@ Material:
         m_Texture: {fileID: 2800000, guid: 9ae90ae892aac0c4d8acadfb51f95425, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _BottomBricksNormal:
+        m_Texture: {fileID: 2800000, guid: 20e509186e3bc9440b0fb3700c8af500, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _BottomBricksTex:
         m_Texture: {fileID: 2800000, guid: 33d12c0f724f9c74faa68c5d0dcf851d, type: 3}
         m_Scale: {x: 5, y: 10}
+        m_Offset: {x: 0, y: 0}
+    - _BricksDamageNoise:
+        m_Texture: {fileID: 2800000, guid: 3cc2d8cb7229e374499f9d7ae2b5ac3f, type: 3}
+        m_Scale: {x: 4.73, y: 16}
         m_Offset: {x: 0, y: 0}
     - _CeilingTex:
         m_Texture: {fileID: 18700000, guid: d619e7c605be95b4d8bbaf8d50cc63a6, type: 3}
@@ -47,6 +55,18 @@ Material:
         m_Texture: {fileID: 8900000, guid: 5b50342ca9f9ba24e8cb8d180c4a596d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _OutsideWallDamage:
+        m_Texture: {fileID: 2800000, guid: cc66fbdff84945c40b3aff51de8c5d08, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OutsideWallDamageMask:
+        m_Texture: {fileID: 2800000, guid: 9433ea7b63a34f941b0d876a7b3725d8, type: 3}
+        m_Scale: {x: 0.5, y: 0.94}
+        m_Offset: {x: 0, y: 0}
+    - _OutsideWallNormal:
+        m_Texture: {fileID: 2800000, guid: 8da32eba8b68bcf45bcb1f3638994604, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _OutsideWallTex:
         m_Texture: {fileID: 2800000, guid: 79e82aba4f4c06d4b95744c948a6df8a, type: 3}
         m_Scale: {x: 3, y: 2}
@@ -59,15 +79,24 @@ Material:
         m_Texture: {fileID: 18700000, guid: 3385aad54ae4e544db1cf6debdcfcda9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _WindowNormal:
+        m_Texture: {fileID: 2800000, guid: 07513fc6de2e12a40a5f6b15b748a340, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _WindowTex:
         m_Texture: {fileID: 2800000, guid: 8514360399efa6d4a9eaa648ada5b928, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BottomBricksHeight: 0.1
+    - _BottomBricksHeight: 0.068
+    - _BricksDamageBottom: 0.073
+    - _BricksDamageMax: 0
+    - _BricksDamageMin: 0.42
+    - _BricksDamageNoiseIntensity: 0.01
+    - _BricksDamageTop: 0
     - _CeilingInterval: 1
-    - _CeilingsCount: 8
+    - _CeilingsCount: 12
     - _CeilingsOffset: 0.5
     - _ClosedShutters: 0.196
     - _DbgRotation: 90
