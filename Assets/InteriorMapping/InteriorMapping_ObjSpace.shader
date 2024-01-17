@@ -21,6 +21,10 @@ Shader "Interior Mapping (Object Space)"
 		_BottomBricksTex ("Bottom Bricks", 2D) = "black" {}
 		[Normal] [NoScaleOffset] _BottomBricksNormal ("Bottom Bricks Normal", 2D) = "bump" {}
 
+		[Header(REFRACTION)]
+		_WindowRefraction ("Window Refraction", Range(0, 0.1)) = 0
+		_RefractionStep ("Refraction Step", Float) = 1024
+
 		[Header(BRICKS DAMAGE)]
 		_BricksDamageMin ("Bricks Damage Min", Range(0, 1)) = 0
 		_BricksDamageMax ("Bricks Damage Max", Range(0, 1)) = 0
@@ -113,6 +117,9 @@ Shader "Interior Mapping (Object Space)"
 		sampler2D _BottomBricksNormal;
 		float4 _BottomBricksTex_ST;
 
+		float _WindowRefraction;
+		float _RefractionStep;
+
 		sampler2D _BricksDamageNoise;
 		float4 _BricksDamageNoise_ST;
 		float _BricksDamageNoiseIntensity; 
@@ -137,6 +144,14 @@ Shader "Interior Mapping (Object Space)"
 		{
 			return frac(sin(dot(s, float2(12.9898, 78.233))) * 43758.5453);
 		}
+
+		float3 hash23(float2 input)
+        {
+            float a = dot(input.xyx, float3(127.1, 311.7, 74.7));
+            float b = dot(input.yxx, float3(269.5, 183.3, 246.1));
+            float c = dot(input.xyy, float3(113.5, 271.9, 124.6));
+            return frac(sin(float3(a, b, c)) * 43758.5453123);
+        }
 		
         RayPlaneIntersection rayToPlaneIntersection(float3 rayStart, float3 rayDirection, float3 planeNormal, float3 planePosition)
         {
@@ -167,6 +182,8 @@ Shader "Interior Mapping (Object Space)"
         	float3 offset = float3(wallsOffset, ceilingsOffset, wallsOffset);
         	
 			float3 rayDirection = normalize(i.objectViewDir);
+			float3 refractionDirection = hash23(floor((i.uv_WindowTex.xy * float2(1, 3)) * _RefractionStep) / _RefractionStep); // TODO: 1,3 is object scale.
+			rayDirection += refractionDirection * _WindowRefraction;
 			float3 rayStart = i.localPosition + offset + rayDirection * 1e-6;
 
 			FragmentRayData rayData;
