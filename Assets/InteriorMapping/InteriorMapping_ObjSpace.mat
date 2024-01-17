@@ -102,14 +102,14 @@ Material:
     - _CeilingInterval: 1
     - _CeilingsCount: 18
     - _CeilingsOffset: 0.5
-    - _ClosedShutters: 0
+    - _ClosedShutters: 0.24
     - _DbgRotation: 90
     - _Depth: 8.6
     - _IgnoreCeilingCount: 1
     - _IgnoredFloorsCount: 2
-    - _LitRooms: 0
+    - _LitRooms: 0.54
     - _RefractionStep: 2048
-    - _Shutters: 0
+    - _Shutters: 0.53
     - _WallsCount: 6
     - _WindowRefraction: 0.008
     m_Colors:
