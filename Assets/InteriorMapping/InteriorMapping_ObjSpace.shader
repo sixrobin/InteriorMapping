@@ -262,7 +262,8 @@ Shader "Interior Mapping (Object Space)"
 				rayData.color.rgb *= OutQuad(saturate(shutterPercentage01 + _Shutters * roomUID)); // Reduce unlit room light based on shutter opening.
 			
 			// Outside wall color.
-			float3 outsideWallColor = tex2D(_OutsideWallTex, uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * float2(_WallsCount, _CeilingsCount));
+			float2 uvScale = lerp(float2(_WallsCount, _CeilingsCount), float2(min(_WallsCount, _CeilingsCount).xx), roof);
+			float3 outsideWallColor = tex2D(_OutsideWallTex, uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * uvScale);
 			float3 bottomBricksColor = tex2D(_BottomBricksTex, uv_ST(i.uv_WindowTex, _BottomBricksTex_ST));
 			float bottomBricksMask = step(i.uv_WindowTex.y, _BottomBricksHeight) * (1 - roof);
 			outsideWallColor = lerp(outsideWallColor, bottomBricksColor, bottomBricksMask);
