@@ -3,5 +3,4 @@
 - Fix different texture size between left/right walls and back wall.
 - Cleanup shader code (macros ?).
 - Bake all the textures in a sprite sheet to avoid having too many textures?
-- Fix windows normal with first floor clipping.
-- Concrete texture.
+- Odd ceilings count bugs again.

@@ -16,21 +16,12 @@ Shader "Interior Mapping (Object Space)"
 		_ShuttersTex ("Shutters", 2D) = "black" {}
 		_OutsideWallTex ("Outside Wall", 2D) = "white" {}
 		[Normal] [NoScaleOffset] _OutsideWallNormal ("Outside Wall Normal", 2D) = "bump" {}
-		_OutsideWallDamage ("Outside Wall Damage", 2D) = "white" {}
-		_OutsideWallDamageMask ("Outside Wall Damage Mask", 2D) = "black" {}
 		_BottomBricksTex ("Bottom Bricks", 2D) = "black" {}
 		[Normal] [NoScaleOffset] _BottomBricksNormal ("Bottom Bricks Normal", 2D) = "bump" {}
 
 		[Header(REFRACTION)]
 		_WindowRefraction ("Window Refraction", Range(0, 0.1)) = 0
 		_RefractionStep ("Refraction Step", Float) = 1024
-
-		[Header(BRICKS DAMAGE)]
-		_BricksDamageMin ("Bricks Damage Min", Range(0, 1)) = 0
-		_BricksDamageMax ("Bricks Damage Max", Range(0, 1)) = 0
-		_BricksDamageNoise ("Bricks Damage Noise", 2D) = "black" {}
-		_BricksDamageNoiseIntensity ("Bricks Damage Noise Intensity", Range(0, 1)) = 0
-		_BricksDamageBottom ("Bricks Damage Bottom", Range(0, 1)) = 0
 
 		[Header(BOTTOM BRICKS)]
 		_BottomBricksHeight ("Bottom Bricks Height", Range(0, 1)) = 0.1
@@ -44,11 +35,6 @@ Shader "Interior Mapping (Object Space)"
 		_ClosedShutters ("Closed Shutters", Range(0, 1)) = 0
 
         [Header(COLORS)]
-        _CeilingColor ("Ceiling Color", Color) = (1,1,1,1)
-        _FloorColor ("Floor Color", Color) = (1,1,1,1)
-        _WallRightColor ("Wall Right Color", Color) = (1,1,1,1)
-        _WallLeftColor ("Wall Left Color", Color) = (1,1,1,1)
-        _WallBackColor ("Wall Back Color", Color) = (1,1,1,1)
         _WindowGlassColor ("Window Color", Color) = (1,1,1,0)
 	}
 	
@@ -93,51 +79,31 @@ Shader "Interior Mapping (Object Space)"
 			float distance;
 		};
 
+		#define DECLARE_TEX2DARRAY_ST(tex) UNITY_DECLARE_TEX2DARRAY(tex); float4 tex##_ST;
+		#define DECLARE_TEX_ST(tex)        sampler2D tex; float4 tex##_ST;
+
 		float _CeilingsCount;
 		float _WallsCount;
 		float _IgnoredFloorsCount;
 		
-        UNITY_DECLARE_TEX2DARRAY(_CeilingTex);
-		float4 _CeilingTex_ST;
-        UNITY_DECLARE_TEX2DARRAY(_FloorTex);
-		float4 _FloorTex_ST;
-        UNITY_DECLARE_TEX2DARRAY(_WallTex);
-		float4 _WallTex_ST;
+        DECLARE_TEX2DARRAY_ST(_CeilingTex)
+        DECLARE_TEX2DARRAY_ST(_FloorTex)
+        DECLARE_TEX2DARRAY_ST(_WallTex)
+		DECLARE_TEX_ST(_OutsideWallTex)
+		sampler2D _OutsideWallNormal;
+		DECLARE_TEX_ST(_BottomBricksTex)
+		sampler2D _BottomBricksNormal;
 		sampler2D _WindowTex;
 		sampler2D _WindowNormal;
 		sampler2D _ShuttersTex;
-		sampler2D _OutsideWallTex;
-		float4 _OutsideWallTex_ST;
-		sampler2D _OutsideWallNormal;
-		sampler2D _OutsideWallDamage;
-		float4 _OutsideWallDamage_ST;
-		sampler2D _OutsideWallDamageMask;
-		float4 _OutsideWallDamageMask_ST;
-		sampler2D _BottomBricksTex;
-		sampler2D _BottomBricksNormal;
-		float4 _BottomBricksTex_ST;
 
 		float _WindowRefraction;
 		float _RefractionStep;
-
-		sampler2D _BricksDamageNoise;
-		float4 _BricksDamageNoise_ST;
-		float _BricksDamageNoiseIntensity; 
-		float _BricksDamageMin;
-		float _BricksDamageMax;
-		float _BricksDamageBottom;
-		
 		float _BottomBricksHeight;
 		float _Shutters;
 		float _ClosedShutters;
 		float _LitRooms;
 		float4 _RoomLightColor;
-
-		float4 _CeilingColor;
-		float4 _FloorColor;
-		float4 _WallRightColor;
-		float4 _WallLeftColor;
-		float4 _WallBackColor;
 		float4 _WindowGlassColor;
 
 		float2 random(float2 s)
@@ -211,7 +177,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_CeilingTex, float3(uv_ST(hit.position.xz, _CeilingTex_ST) * _WallsCount, ceilingTextureIndex)) * _CeilingColor;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_CeilingTex, float3(uv_ST(hit.position.xz, _CeilingTex_ST) * _WallsCount, ceilingTextureIndex));
 				}
 			}
 			else
@@ -221,7 +187,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_FloorTex, float3(uv_ST(hit.position.xz, _FloorTex_ST) * _WallsCount, floorTextureIndex)).rgb * _FloorColor;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_FloorTex, float3(uv_ST(hit.position.xz, _FloorTex_ST) * _WallsCount, floorTextureIndex)).rgb;
 				}
 			}
 
@@ -233,7 +199,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.zy, _WallTex_ST) * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount), wallTextureIndex)).rgb * _WallRightColor;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.zy, _WallTex_ST) * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount), wallTextureIndex)).rgb;
 				}
 			}
 			else
@@ -243,7 +209,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.zy, _WallTex_ST) * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount), wallTextureIndex)).rgb * _WallLeftColor;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.zy, _WallTex_ST) * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount), wallTextureIndex)).rgb;
 				}
 			}
 
@@ -255,7 +221,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.xy, _WallTex_ST) * float2(_WallsCount, _CeilingsCount), wallTextureIndex)).rgb * _WallBackColor;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.xy, _WallTex_ST) * float2(_WallsCount, _CeilingsCount), wallTextureIndex)).rgb;
 				}
         	}
         	else
@@ -265,7 +231,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.xy, _WallTex_ST) * float2(_WallsCount, _CeilingsCount), wallTextureIndex)).rgb * _WallBackColor;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.xy, _WallTex_ST) * float2(_WallsCount, _CeilingsCount), wallTextureIndex)).rgb;
 				}
         	}
 
@@ -284,14 +250,6 @@ Shader "Interior Mapping (Object Space)"
 			
 			// Outside wall color.
 			float3 outsideWallColor = tex2D(_OutsideWallTex, uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * float2(_WallsCount, _CeilingsCount));
-			// Bricks damage.
-			float3 outsideWallDamageColor = tex2D(_OutsideWallDamage, uv_ST(i.uv_WindowTex, _OutsideWallDamage_ST) * float2(_WallsCount, _CeilingsCount));
-			float outsideWallDamageMask = tex2D(_OutsideWallDamageMask, uv_ST(i.uv_WindowTex, _OutsideWallDamageMask_ST) * float2(_WallsCount, _CeilingsCount));
-			outsideWallDamageMask = smoothstep(_BricksDamageMin, _BricksDamageMax, outsideWallDamageMask);
-			float bricksDamageNoise = (tex2D(_BricksDamageNoise, uv_ST(i.uv_WindowTex, _BricksDamageNoise_ST)) * 2 - 1) * _BricksDamageNoiseIntensity;
-			outsideWallDamageMask += step(i.uv_WindowTex.y + bricksDamageNoise, _BricksDamageBottom * (1 - roof));
-			outsideWallColor = lerp(outsideWallColor, outsideWallDamageColor, saturate(outsideWallDamageMask));
-			// Bottom bricks.
 			float3 bottomBricksColor = tex2D(_BottomBricksTex, uv_ST(i.uv_WindowTex, _BottomBricksTex_ST));
 			float bottomBricksMask = step(i.uv_WindowTex.y, _BottomBricksHeight) * (1 - roof);
 			outsideWallColor = lerp(outsideWallColor, bottomBricksColor, bottomBricksMask);
@@ -299,7 +257,7 @@ Shader "Interior Mapping (Object Space)"
 			// Final color computation.
 			float3 color = outsideWallColor;
             float4 windowColor = tex2D(_WindowTex, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount));
-			float windowGlassMask = saturate(windowColor.a - smoothstep(0, 0.5, Luminance(windowColor.rgb)));
+			float windowGlassMask = saturate(windowColor.a - smoothstep(0, 0.5, 1 - Luminance(windowColor.rgb)));
 			color = lerp(color, windowColor.rgb, windowColor.a - windowGlassMask);
             color = lerp(color, rayData.color, windowGlassMask);
 			color = lerp(color, shuttersColor, windowGlassMask * shuttersColor.a);
@@ -311,13 +269,13 @@ Shader "Interior Mapping (Object Space)"
 			float3 windowNormal = UnpackNormal(tex2D(_WindowNormal, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)));
 			outsideWallNormal.xy *= (1 - windowColor.a) * (1 - bottomBricksMask);
 			bottomBricksNormal.xy *= bottomBricksNormal * bottomBricksMask;
-			windowNormal.xy *= windowColor.a * windowGlassMask * (1 - bottomBricksMask);
+			windowNormal.xy *= windowColor.a * windowGlassMask * (1 - bottomBricksMask) * (1 - discardInterior);
 			float3 normal = saturate(outsideWallNormal + bottomBricksNormal + windowNormal);
 			
 			o.Albedo = discardInterior ? outsideWallColor : color;
 			o.Normal = saturate(normal);
 			o.Emission = discardInterior ? 0 : _RoomLightColor * _RoomLightColor.a * lit * windowGlassMask * (1 - shuttersColor.a);
-			o.Smoothness = discardInterior ? 0 : windowGlassMask;
+			o.Smoothness = discardInterior ? 0 : windowGlassMask * step(shuttersGradient.y, shutterPercentageRemapped);
 		}
 		
 		ENDCG
