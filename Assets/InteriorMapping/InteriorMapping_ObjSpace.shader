@@ -211,7 +211,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.zy, _WallTex_ST) * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount), wallTextureIndex)).rgb;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.zy, _WallTex_ST) * _CeilingsCount, wallTextureIndex)).rgb;
 				}
 			}
 			else
@@ -221,7 +221,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.zy, _WallTex_ST) * _CeilingsCount * float2(1, _WallsCount / _CeilingsCount), wallTextureIndex)).rgb;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.zy, _WallTex_ST) * _CeilingsCount, wallTextureIndex)).rgb;
 				}
 			}
 
