@@ -55,9 +55,10 @@ Shader "Interior Mapping (Object Space)"
 		#include "Assets/CGInc/Maths.cginc"
 		#include "Assets/CGInc/UV.cginc"
 
-		#define RIGHT   float3(1, 0, 0)
-		#define UP      float3(0, 1, 0)
-		#define FORWARD float3(0, 0, 1)
+		#define RIGHT         float3(1, 0, 0)
+		#define UP            float3(0, 1, 0)
+		#define FORWARD       float3(0, 0, 1)
+		#define SMOOTHSTEP_AA 0.002
 
 		struct Input 
 		{
@@ -244,7 +245,8 @@ Shader "Interior Mapping (Object Space)"
 			float shutterPercentageRemapped = Remap(shutterPercentage01, 0, 1, 0.15, 0.85); // Remap from cell bounds to window bounds.
 			float2 shuttersGradient = frac(i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)).xy;
 			float4 shuttersColor = tex2D(_ShuttersTex, shuttersGradient - float2(0, shutterPercentageRemapped));
-			shuttersColor = lerp(shuttersColor, 0, step(shuttersGradient.y, shutterPercentageRemapped));
+			float shuttersMask = smoothstep(shutterPercentageRemapped - SMOOTHSTEP_AA, shutterPercentageRemapped + SMOOTHSTEP_AA, shuttersGradient.y);
+			shuttersColor = lerp(0, shuttersColor, shuttersMask);
 			if (lit == 0)
 				rayData.color.rgb *= OutQuad(saturate(shutterPercentage01 + _Shutters * roomUID)); // Reduce unlit room light based on shutter opening.
 			
