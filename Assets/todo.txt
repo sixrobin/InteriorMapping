@@ -3,5 +3,3 @@
 - Fix different texture size between left/right walls and back wall.
 - Cleanup shader code (macros ?).
 - Bake all the textures in a sprite sheet to avoid having too many textures?
-- Odd ceilings count bugs again.
-- Anti aliasing on windows/shutters.

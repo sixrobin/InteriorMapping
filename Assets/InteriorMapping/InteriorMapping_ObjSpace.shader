@@ -3,39 +3,49 @@ Shader "Interior Mapping (Object Space)"
     Properties 
 	{
 		[Header(DIMENSIONS)]
+		[Space(5)]
 		_CeilingsCount ("Ceiling Count", Float) = 4
 		_WallsCount ("Walls Count", Float) = 4
 		_IgnoredFloorsCount ("Ignored Floors Count", Float) = 1
 		
-		[Header(TEXTURES)]
+		[Space(30)]
+
+		[Header(INTERIOR)]
+		[Space(5)]
 		_CeilingTex ("Ceiling", 2DArray) = "" {}
 		_FloorTex ("Floor", 2DArray) = "" {}
         _WallTex ("Wall", 2DArray) = "" {}
-		[NoScaleOffset] _WindowTex ("Window", 2D) = "black" {}
-		[Normal] [NoScaleOffset] _WindowNormal ("Window Normal", 2D) = "bump" {}
-		_ShuttersTex ("Shutters", 2D) = "black" {}
+		_LitRooms ("Lit Rooms", Range(0, 1)) = 0.5
+		_RoomLightColor ("Room Light Color", Color) = (1, 1, 0.25, 1)
+
+		[Space(30)]
+		
+		[Header(OUTSIDE WALL)]
+		[Space(5)]
 		_OutsideWallTex ("Outside Wall", 2D) = "white" {}
 		[Normal] [NoScaleOffset] _OutsideWallNormal ("Outside Wall Normal", 2D) = "bump" {}
 		_BottomBricksTex ("Bottom Bricks", 2D) = "black" {}
 		[Normal] [NoScaleOffset] _BottomBricksNormal ("Bottom Bricks Normal", 2D) = "bump" {}
+		_BottomBricksHeight ("Bottom Bricks Height", Range(0, 1)) = 0.1
 
-		[Header(REFRACTION)]
+		[Space(30)]
+
+		[Header(WINDOWS)]
+		[Space(5)]
+		[NoScaleOffset] _WindowTex ("Window", 2D) = "black" {}
+		[NoScaleOffset] [Normal] _WindowNormal ("Window Normal", 2D) = "bump" {}
 		_WindowRefraction ("Window Refraction", Range(0, 0.1)) = 0
 		_RefractionStep ("Refraction Step", Float) = 1024
+		_WindowGlassColor ("Window Color", Color) = (1,1,1,0)
 
-		[Header(BOTTOM BRICKS)]
-		_BottomBricksHeight ("Bottom Bricks Height", Range(0, 1)) = 0.1
-		
-		[Header(ROOMS LIGHTING)]
-		_LitRooms ("Lit Rooms", Range(0, 1)) = 0.5
-		_RoomLightColor ("Room Light Color", Color) = (1, 1, 0.25, 1)
-		
+		[Space(30)]
+
 		[Header(SHUTTERS)]
+		[Space(5)]
+		_ShuttersTex ("Shutters", 2D) = "black" {}
+		[NoScaleOffset] [Normal] _ShuttersNormal ("Shutters Normal", 2D) = "bump" {}
 		_Shutters ("Shutters", Range(0, 1)) = 0.5
 		_ClosedShutters ("Closed Shutters", Range(0, 1)) = 0
-
-        [Header(COLORS)]
-        _WindowGlassColor ("Window Color", Color) = (1,1,1,0)
 	}
 	
 	SubShader 
@@ -97,6 +107,7 @@ Shader "Interior Mapping (Object Space)"
 		sampler2D _WindowTex;
 		sampler2D _WindowNormal;
 		sampler2D _ShuttersTex;
+		sampler2D _ShuttersNormal;
 
 		float _WindowRefraction;
 		float _RefractionStep;
@@ -269,10 +280,12 @@ Shader "Interior Mapping (Object Space)"
 			float3 outsideWallNormal = UnpackNormal(tex2D(_OutsideWallNormal, uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * float2(_WallsCount, _CeilingsCount)));
 			float3 bottomBricksNormal = UnpackNormal(tex2D(_BottomBricksNormal, uv_ST(i.uv_WindowTex, _BottomBricksTex_ST)));
 			float3 windowNormal = UnpackNormal(tex2D(_WindowNormal, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)));
+			float3 shuttersNormal = UnpackNormal(tex2D(_ShuttersNormal, shuttersGradient - float2(0, shutterPercentageRemapped)));
 			outsideWallNormal.xy *= (1 - windowColor.a) * (1 - bottomBricksMask);
 			bottomBricksNormal.xy *= bottomBricksNormal * bottomBricksMask;
 			windowNormal.xy *= windowColor.a * windowGlassMask * (1 - bottomBricksMask) * (1 - discardInterior);
-			float3 normal = saturate(outsideWallNormal + bottomBricksNormal + windowNormal);
+			shuttersNormal.xy *= shuttersMask * (windowGlassMask * shuttersColor.a) * (1 - discardInterior);
+			float3 normal = saturate(outsideWallNormal + bottomBricksNormal + windowNormal + shuttersNormal);
 			
 			o.Albedo = discardInterior ? outsideWallColor : color;
 			o.Normal = saturate(normal);
