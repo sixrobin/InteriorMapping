@@ -144,7 +144,7 @@ Shader "Interior Mapping (Object Space)"
 		void surf(Input i, inout SurfaceOutputStandard o)
 		{
         	float wallsOffset = 0.5 / _WallsCount * (_WallsCount % 2);
-        	float ceilingsOffset = 0.5 / _CeilingsCount * (_CeilingsCount % 2);
+        	float ceilingsOffset = 0; // 0.5 / _CeilingsCount * (_CeilingsCount % 2); // Only if objet's pivot is at the center.
         	float3 offset = float3(wallsOffset, ceilingsOffset, wallsOffset);
         	
 			float3 rayDirection = normalize(i.objectViewDir);
