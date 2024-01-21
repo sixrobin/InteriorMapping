@@ -75,6 +75,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: 5052d3bb58b34c14f8ebfc6739f34942, type: 3}
         m_Scale: {x: 0.1, y: 0.1}
         m_Offset: {x: 0, y: 0}
+    - _ShuttersNormal:
+        m_Texture: {fileID: 2800000, guid: a903789e1fcbca5409832ac0abee265b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ShuttersTex:
         m_Texture: {fileID: 2800000, guid: 1bf205dc1fb331b4995254fa12853aa0, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -100,18 +104,18 @@ Material:
     - _BricksDamageNoiseIntensity: 0.01
     - _BricksDamageTop: 0
     - _CeilingInterval: 1
-    - _CeilingsCount: 12
+    - _CeilingsCount: 15
     - _CeilingsOffset: 0.5
-    - _ClosedShutters: 0.24
+    - _ClosedShutters: 0.103
     - _DbgRotation: 90
     - _Depth: 8.6
     - _IgnoreCeilingCount: 1
     - _IgnoredFloorsCount: 1
-    - _LitRooms: 0.76
+    - _LitRooms: 0.358
     - _RefractionStep: 40962
-    - _Shutters: 0.53
-    - _WallsCount: 6
-    - _WindowRefraction: 0.003
+    - _Shutters: 0.492
+    - _WallsCount: 5
+    - _WindowRefraction: 0
     m_Colors:
     - _CeilingColor: {r: 1, g: 1, b: 1, a: 1}
     - _ColorFloor: {r: 1, g: 0, b: 0, a: 1}
@@ -123,7 +127,7 @@ Material:
     - _DebugRayDirection: {r: 0, g: 0, b: 1, a: 0}
     - _DebugRayStart: {r: 0, g: 0, b: -1, a: 0}
     - _FloorColor: {r: 1, g: 1, b: 1, a: 1}
-    - _RoomLightColor: {r: 1, g: 0.25714284, b: 0, a: 1}
+    - _RoomLightColor: {r: 1, g: 0.3117894, b: 0, a: 1}
     - _WallBackColor: {r: 1, g: 1, b: 1, a: 1}
     - _WallLeftColor: {r: 1, g: 1, b: 1, a: 1}
     - _WallRightColor: {r: 1, g: 1, b: 1, a: 1}

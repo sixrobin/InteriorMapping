@@ -57,7 +57,7 @@ Shader "Interior Mapping (Object Space)"
 		
 		CGPROGRAM
 
-		#pragma surface surf Standard vertex:vert addshadow
+		#pragma surface surf Standard vertex:vert fullforwardshadows addshadow
 		#pragma require 2darray
 		#pragma target 3.5
 
