@@ -32,7 +32,7 @@ Shader "Interior Mapping (Object Space)"
 
 		[Header(WINDOWS)]
 		[Space(5)]
-		[NoScaleOffset] _WindowTex ("Window", 2D) = "black" {}
+		[NoScaleOffset] _WindowTex ("Window", 2D) = "white" {}
 		[NoScaleOffset] [Normal] _WindowNormal ("Window Normal", 2D) = "bump" {}
 		_WindowRefraction ("Window Refraction", Range(0, 0.1)) = 0
 		_RefractionStep ("Refraction Step", Float) = 1024
@@ -105,6 +105,7 @@ Shader "Interior Mapping (Object Space)"
 		DECLARE_TEX_ST(_BottomBricksTex)
 		sampler2D _BottomBricksNormal;
 		sampler2D _WindowTex;
+		float4 _WindowTex_TexelSize;
 		sampler2D _WindowNormal;
 		sampler2D _ShuttersTex;
 		sampler2D _ShuttersNormal;
@@ -133,12 +134,11 @@ Shader "Interior Mapping (Object Space)"
 		
         RayPlaneIntersection rayToPlaneIntersection(float3 rayStart, float3 rayDirection, float3 planeNormal, float3 planePosition)
         {
-        	RayPlaneIntersection result;
+			// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection.html
 
-        	// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection.html
+        	RayPlaneIntersection result;
         	result.distance = dot(planePosition - rayStart, planeNormal) / dot(rayDirection, planeNormal);
         	result.position = rayStart + rayDirection * result.distance;
-
         	return result;
         }
 
@@ -155,12 +155,22 @@ Shader "Interior Mapping (Object Space)"
 
 		void surf(Input i, inout SurfaceOutputStandard o)
 		{
+			// https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
+
+			float dimensionsRatio = _WallsCount / _CeilingsCount;
         	float wallsOffset = 0.5 / _WallsCount * (_WallsCount % 2);
         	float ceilingsOffset = 0; // 0.5 / _CeilingsCount * (_CeilingsCount % 2); // Only if objet's pivot is at the center.
         	float3 offset = float3(wallsOffset, ceilingsOffset, wallsOffset);
-        	
+
+			float3 worldScale = float3
+			(
+			    length(unity_ObjectToWorld._m00_m10_m20),
+			    length(unity_ObjectToWorld._m01_m11_m21),
+			    length(unity_ObjectToWorld._m02_m12_m22)
+			);
+			
 			float3 rayDirection = normalize(i.objectViewDir);
-			float3 refractionDirection = hash23(floor((i.uv_WindowTex.xy * float2(1, 3)) * _RefractionStep) / _RefractionStep); // TODO: 1,3 is object scale.
+			float3 refractionDirection = hash23(floor(i.uv_WindowTex.xy * float2(1, worldScale.y) * _RefractionStep) / _RefractionStep);
 			rayDirection += refractionDirection * _WindowRefraction;
 			float3 rayStart = i.localPosition + offset + rayDirection * 1e-6;
 
@@ -170,15 +180,14 @@ Shader "Interior Mapping (Object Space)"
 
 			float floorIndex = floor(i.uv_WindowTex.y * _CeilingsCount);
 			float roof = dot(i.normal, UP);
-			float discardInterior = floorIndex < _IgnoredFloorsCount || roof;
+			float discardInterior = floorIndex < _IgnoredFloorsCount || (roof && _WindowTex_TexelSize.z > 1);
 			
         	float roomUID = random(ceil(i.uv_WindowTex.xy * float2(_WallsCount, _CeilingsCount)));
-			float ceilingTextureIndex = floor(roomUID * 2); // TODO: Find a way to get ceiling textures count dynamically.
-			float floorTextureIndex = floor(roomUID * 3); // TODO: Find a way to get floor textures count dynamically.
-			float wallTextureIndex = floor(roomUID * 2); // TODO: Find a way to get wall textures count dynamically.
+			float ceilingTextureIndex = floor(roomUID * 4); // TODO: Find a way to get ceiling textures count dynamically.
+			float floorTextureIndex = floor(roomUID * 4); // TODO: Find a way to get floor textures count dynamically.
+			float wallTextureIndex = floor(roomUID * 8); // TODO: Find a way to get wall textures count dynamically.
 
-			// https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
-        	float dc = 1.0 / _CeilingsCount;
+			float dc = 1.0 / _CeilingsCount;
 			float dw = 1.0 / _WallsCount;
 
 			// Ceiling/Floor.
@@ -211,7 +220,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.zy, _WallTex_ST) * _CeilingsCount, wallTextureIndex)).rgb;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.zy, _WallTex_ST) * float2(_CeilingsCount * dimensionsRatio, _CeilingsCount), wallTextureIndex)).rgb;
 				}
 			}
 			else
@@ -221,7 +230,7 @@ Shader "Interior Mapping (Object Space)"
 				if (hit.distance < rayData.distance)
 				{
 					rayData.distance = hit.distance;
-					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.zy, _WallTex_ST) * _CeilingsCount, wallTextureIndex)).rgb;
+					rayData.color = UNITY_SAMPLE_TEX2DARRAY(_WallTex, float3(uv_ST(hit.position.zy, _WallTex_ST) * float2(_CeilingsCount * dimensionsRatio, _CeilingsCount), wallTextureIndex)).rgb;
 				}
 			}
 
@@ -285,13 +294,22 @@ Shader "Interior Mapping (Object Space)"
 			outsideWallNormal.xy *= (1 - windowColor.a) * (1 - bottomBricksMask);
 			bottomBricksNormal.xy *= bottomBricksNormal * bottomBricksMask;
 			windowNormal.xy *= windowColor.a * windowGlassMask * (1 - bottomBricksMask) * (1 - discardInterior);
+			if (_WindowTex_TexelSize.x == 1)
+				windowNormal.xy *= 0;
 			shuttersNormal.xy *= shuttersMask * (windowGlassMask * shuttersColor.a) * (1 - discardInterior);
 			float3 normal = saturate(outsideWallNormal + bottomBricksNormal + windowNormal + shuttersNormal);
+
+			// Smoothness computation.
+			float smoothness = windowGlassMask * step(shuttersGradient.y, shutterPercentageRemapped);
+			if (discardInterior)
+				smoothness = 0;
+			else if (_WindowTex_TexelSize.x == 1) // No texture set in Inspector.
+				smoothness *= 1 - windowColor.a;
 			
 			o.Albedo = discardInterior ? outsideWallColor : color;
 			o.Normal = saturate(normal);
 			o.Emission = discardInterior ? 0 : _RoomLightColor * _RoomLightColor.a * lit * windowGlassMask * (1 - shuttersColor.a);
-			o.Smoothness = discardInterior ? 0 : windowGlassMask * step(shuttersGradient.y, shutterPercentageRemapped);
+			o.Smoothness = smoothness;
 		}
 		
 		ENDCG
