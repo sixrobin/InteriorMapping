@@ -43,6 +43,8 @@ Shader "Interior Mapping (Object Space)"
 		[NoScaleOffset] [Normal] _ShuttersNormal ("Shutters Normal", 2D) = "bump" {}
 		_Shutters ("Shutters", Range(0, 1)) = 0.5
 		_ClosedShutters ("Closed Shutters", Range(0, 1)) = 0
+		_ShuttersHeightRemapMin ("Shutters Height Remap Min", Range(0, 1)) = 0
+		_ShuttersHeightRemapMax ("Shutters Height Remap Max", Range(0, 1)) = 1
 	}
 	
 	SubShader 
@@ -104,6 +106,8 @@ Shader "Interior Mapping (Object Space)"
 		sampler2D _WindowNormal;
 		sampler2D _ShuttersTex;
 		sampler2D _ShuttersNormal;
+		float _ShuttersHeightRemapMin;
+		float _ShuttersHeightRemapMax;
 
 		float _WindowRefraction;
 		float _RefractionStep;
@@ -257,7 +261,7 @@ Shader "Interior Mapping (Object Space)"
 			// Shutters.
 			_Shutters = (1 - _Shutters) * step(_ClosedShutters, roomUID);
 			float shutterPercentage01 = _Shutters + _Shutters * roomUID;
-			float shutterPercentageRemapped = Remap(shutterPercentage01, 0, 1, 0.15, 0.85); // Remap from cell bounds to window bounds. TODO: expose values?
+			float shutterPercentageRemapped = Remap(shutterPercentage01, 0, 1, _ShuttersHeightRemapMin, _ShuttersHeightRemapMax); // Remap from cell bounds to window bounds.
 			float2 shuttersGradient = frac(i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)).xy;
 			float4 shuttersColor = tex2D(_ShuttersTex, shuttersGradient - float2(0, shutterPercentageRemapped));
 			float shuttersMask = smoothstep(shutterPercentageRemapped - SMOOTHSTEP_AA, shutterPercentageRemapped + SMOOTHSTEP_AA, shuttersGradient.y);

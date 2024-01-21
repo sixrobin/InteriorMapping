@@ -113,7 +113,9 @@ Material:
     - _IgnoredFloorsCount: 1
     - _LitRooms: 0.358
     - _RefractionStep: 32768
-    - _Shutters: 0.492
+    - _Shutters: 0.58
+    - _ShuttersHeightRemapMax: 0.85
+    - _ShuttersHeightRemapMin: 0.15
     - _WallsCount: 4
     - _WindowRefraction: 0.004
     m_Colors:
