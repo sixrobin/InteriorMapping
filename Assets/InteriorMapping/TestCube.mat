@@ -92,7 +92,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _WindowTex:
-        m_Texture: {fileID: 2800000, guid: 8514360399efa6d4a9eaa648ada5b928, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -105,21 +105,21 @@ Material:
     - _BricksDamageTop: 0
     - _CeilingInterval: 1
     - _CeilingTexCount: 4
-    - _CeilingsCount: 3
+    - _CeilingsCount: 4
     - _CeilingsOffset: 0.5
-    - _ClosedShutters: 0.088
+    - _ClosedShutters: 0
     - _DbgRotation: 90
     - _Depth: 8.6
     - _FloorTexCount: 4
     - _IgnoreCeilingCount: 1
     - _IgnoredFloorsCount: 0
-    - _LitRooms: 0.032
+    - _LitRooms: 0
     - _RefractionStep: 32768
-    - _Shutters: 0.484
+    - _Shutters: 0
     - _ShuttersHeightRemapMax: 1
     - _ShuttersHeightRemapMin: 0
-    - _WallTexCount: 8
-    - _WallsCount: 3
+    - _WallTexCount: 9
+    - _WallsCount: 4
     - _WindowRefraction: 0
     m_Colors:
     - _CeilingColor: {r: 1, g: 1, b: 1, a: 1}
@@ -137,5 +137,5 @@ Material:
     - _WallLeftColor: {r: 1, g: 1, b: 1, a: 1}
     - _WallRightColor: {r: 1, g: 1, b: 1, a: 1}
     - _WindowColor: {r: 0.39279994, g: 0.8584906, b: 0.7366375, a: 0.13333334}
-    - _WindowGlassColor: {r: 0.75, g: 1, b: 0.99059665, a: 0.22745098}
+    - _WindowGlassColor: {r: 0.8207547, g: 0.8207547, b: 0.8207547, a: 0.07058824}
   m_BuildTextureStacks: []
