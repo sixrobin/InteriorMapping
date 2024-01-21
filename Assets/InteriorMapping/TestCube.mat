@@ -92,7 +92,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _WindowTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 8514360399efa6d4a9eaa648ada5b928, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -104,17 +104,17 @@ Material:
     - _BricksDamageNoiseIntensity: 0.01
     - _BricksDamageTop: 0
     - _CeilingInterval: 1
-    - _CeilingsCount: 4
+    - _CeilingsCount: 3
     - _CeilingsOffset: 0.5
-    - _ClosedShutters: 0
+    - _ClosedShutters: 0.088
     - _DbgRotation: 90
     - _Depth: 8.6
     - _IgnoreCeilingCount: 1
     - _IgnoredFloorsCount: 0
-    - _LitRooms: 0
+    - _LitRooms: 0.032
     - _RefractionStep: 32768
-    - _Shutters: 0
-    - _WallsCount: 4
+    - _Shutters: 0.484
+    - _WallsCount: 3
     - _WindowRefraction: 0
     m_Colors:
     - _CeilingColor: {r: 1, g: 1, b: 1, a: 1}

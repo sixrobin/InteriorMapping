@@ -104,7 +104,7 @@ Material:
     - _BricksDamageNoiseIntensity: 0.01
     - _BricksDamageTop: 0
     - _CeilingInterval: 1
-    - _CeilingsCount: 15
+    - _CeilingsCount: 12
     - _CeilingsOffset: 0.5
     - _ClosedShutters: 0.103
     - _DbgRotation: 90
@@ -114,7 +114,7 @@ Material:
     - _LitRooms: 0.358
     - _RefractionStep: 32768
     - _Shutters: 0.492
-    - _WallsCount: 5
+    - _WallsCount: 4
     - _WindowRefraction: 0.004
     m_Colors:
     - _CeilingColor: {r: 1, g: 1, b: 1, a: 1}

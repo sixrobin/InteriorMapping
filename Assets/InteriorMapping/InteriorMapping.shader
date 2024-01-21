@@ -24,9 +24,6 @@ Shader "Interior Mapping (Object Space)"
 		[Space(5)]
 		_OutsideWallTex ("Outside Wall", 2D) = "white" {}
 		[Normal] [NoScaleOffset] _OutsideWallNormal ("Outside Wall Normal", 2D) = "bump" {}
-		_BottomBricksTex ("Bottom Bricks", 2D) = "black" {}
-		[Normal] [NoScaleOffset] _BottomBricksNormal ("Bottom Bricks Normal", 2D) = "bump" {}
-		_BottomBricksHeight ("Bottom Bricks Height", Range(0, 1)) = 0.1
 
 		[Space(30)]
 
@@ -102,8 +99,6 @@ Shader "Interior Mapping (Object Space)"
         DECLARE_TEX2DARRAY_ST(_WallTex)
 		DECLARE_TEX_ST(_OutsideWallTex)
 		sampler2D _OutsideWallNormal;
-		DECLARE_TEX_ST(_BottomBricksTex)
-		sampler2D _BottomBricksNormal;
 		sampler2D _WindowTex;
 		float4 _WindowTex_TexelSize;
 		sampler2D _WindowNormal;
@@ -262,7 +257,7 @@ Shader "Interior Mapping (Object Space)"
 			// Shutters.
 			_Shutters = (1 - _Shutters) * step(_ClosedShutters, roomUID);
 			float shutterPercentage01 = _Shutters + _Shutters * roomUID;
-			float shutterPercentageRemapped = Remap(shutterPercentage01, 0, 1, 0.15, 0.85); // Remap from cell bounds to window bounds.
+			float shutterPercentageRemapped = Remap(shutterPercentage01, 0, 1, 0.15, 0.85); // Remap from cell bounds to window bounds. TODO: expose values?
 			float2 shuttersGradient = frac(i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)).xy;
 			float4 shuttersColor = tex2D(_ShuttersTex, shuttersGradient - float2(0, shutterPercentageRemapped));
 			float shuttersMask = smoothstep(shutterPercentageRemapped - SMOOTHSTEP_AA, shutterPercentageRemapped + SMOOTHSTEP_AA, shuttersGradient.y);
@@ -273,9 +268,6 @@ Shader "Interior Mapping (Object Space)"
 			// Outside wall color.
 			float2 uvScale = lerp(float2(_WallsCount, _CeilingsCount), float2(min(_WallsCount, _CeilingsCount).xx), roof);
 			float3 outsideWallColor = tex2D(_OutsideWallTex, uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * uvScale);
-			float3 bottomBricksColor = tex2D(_BottomBricksTex, uv_ST(i.uv_WindowTex, _BottomBricksTex_ST));
-			float bottomBricksMask = step(i.uv_WindowTex.y, _BottomBricksHeight) * (1 - roof);
-			outsideWallColor = lerp(outsideWallColor, bottomBricksColor, bottomBricksMask);
 
 			// Final color computation.
 			float3 color = outsideWallColor;
@@ -288,16 +280,14 @@ Shader "Interior Mapping (Object Space)"
 
 			// Normal computation.
 			float3 outsideWallNormal = UnpackNormal(tex2D(_OutsideWallNormal, uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * float2(_WallsCount, _CeilingsCount)));
-			float3 bottomBricksNormal = UnpackNormal(tex2D(_BottomBricksNormal, uv_ST(i.uv_WindowTex, _BottomBricksTex_ST)));
 			float3 windowNormal = UnpackNormal(tex2D(_WindowNormal, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)));
 			float3 shuttersNormal = UnpackNormal(tex2D(_ShuttersNormal, shuttersGradient - float2(0, shutterPercentageRemapped)));
-			outsideWallNormal.xy *= (1 - windowColor.a) * (1 - bottomBricksMask);
-			bottomBricksNormal.xy *= bottomBricksNormal * bottomBricksMask;
-			windowNormal.xy *= windowColor.a * windowGlassMask * (1 - bottomBricksMask) * (1 - discardInterior);
+			outsideWallNormal.xy *= (1 - windowColor.a);
+			windowNormal.xy *= windowColor.a * windowGlassMask * (1 - discardInterior);
 			if (_WindowTex_TexelSize.x == 1)
 				windowNormal.xy *= 0;
 			shuttersNormal.xy *= shuttersMask * (windowGlassMask * shuttersColor.a) * (1 - discardInterior);
-			float3 normal = saturate(outsideWallNormal + bottomBricksNormal + windowNormal + shuttersNormal);
+			float3 normal = saturate(outsideWallNormal + windowNormal + shuttersNormal);
 
 			// Smoothness computation.
 			float smoothness = windowGlassMask * step(shuttersGradient.y, shutterPercentageRemapped);
@@ -307,8 +297,8 @@ Shader "Interior Mapping (Object Space)"
 				smoothness *= 1 - windowColor.a;
 			
 			o.Albedo = discardInterior ? outsideWallColor : color;
-			o.Normal = saturate(normal);
 			o.Emission = discardInterior ? 0 : _RoomLightColor * _RoomLightColor.a * lit * windowGlassMask * (1 - shuttersColor.a);
+			o.Normal = normal;
 			o.Smoothness = smoothness;
 		}
 		

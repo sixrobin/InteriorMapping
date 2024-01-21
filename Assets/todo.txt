@@ -1,3 +1,5 @@
 - Doors on first floor. Pushed inside the wall using interior mapping too?
-- Custom textures (pixel art? hand painted?).
-- Bake all the textures in a sprite sheet to avoid having too many textures?
+- Better room texturing (not the same texturing for all walls).
+- TODOs in shader code.
+- Shaders cleanup/comments.
+- Remove bottom bricks.
