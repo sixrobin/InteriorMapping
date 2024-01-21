@@ -107,20 +107,20 @@ Material:
     - _CeilingTexCount: 4
     - _CeilingsCount: 12
     - _CeilingsOffset: 0.5
-    - _ClosedShutters: 0.104
+    - _ClosedShutters: 0
     - _DbgRotation: 90
     - _Depth: 8.6
     - _FloorTexCount: 4
     - _IgnoreCeilingCount: 1
     - _IgnoredFloorsCount: 1
-    - _LitRooms: 0.358
+    - _LitRooms: 0
     - _RefractionStep: 32768
-    - _Shutters: 0.58
+    - _Shutters: 0
     - _ShuttersHeightRemapMax: 0.85
     - _ShuttersHeightRemapMin: 0.15
-    - _WallTexCount: 8
+    - _WallTexCount: 9
     - _WallsCount: 4
-    - _WindowRefraction: 0.004
+    - _WindowRefraction: 0.01
     m_Colors:
     - _CeilingColor: {r: 1, g: 1, b: 1, a: 1}
     - _ColorFloor: {r: 1, g: 0, b: 0, a: 1}
@@ -132,10 +132,10 @@ Material:
     - _DebugRayDirection: {r: 0, g: 0, b: 1, a: 0}
     - _DebugRayStart: {r: 0, g: 0, b: -1, a: 0}
     - _FloorColor: {r: 1, g: 1, b: 1, a: 1}
-    - _RoomLightColor: {r: 0.8207547, g: 0.38470972, b: 0.24390352, a: 0.92156863}
+    - _RoomLightColor: {r: 0.7372549, g: 0.30929023, b: 0, a: 0.70980394}
     - _WallBackColor: {r: 1, g: 1, b: 1, a: 1}
     - _WallLeftColor: {r: 1, g: 1, b: 1, a: 1}
     - _WallRightColor: {r: 1, g: 1, b: 1, a: 1}
     - _WindowColor: {r: 0.39279994, g: 0.8584906, b: 0.7366375, a: 0.13333334}
-    - _WindowGlassColor: {r: 0.8443396, g: 1, b: 0.98399246, a: 0.13333334}
+    - _WindowGlassColor: {r: 0.5696867, g: 0.6981132, b: 0.68588215, a: 0.36078432}
   m_BuildTextureStacks: []
