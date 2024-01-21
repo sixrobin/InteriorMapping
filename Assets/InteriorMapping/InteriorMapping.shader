@@ -1,4 +1,4 @@
-Shader "Interior Mapping (Object Space)"
+Shader "Interior Mapping"
 {
     Properties 
 	{
@@ -13,8 +13,11 @@ Shader "Interior Mapping (Object Space)"
 		[Header(INTERIOR)]
 		[Space(5)]
 		_CeilingTex ("Ceiling", 2DArray) = "" {}
+		_CeilingTexCount ("Ceiling Textures Count", Float) = 1
 		_FloorTex ("Floor", 2DArray) = "" {}
+		_FloorTexCount ("Floor Textures Count", Float) = 1
         _WallTex ("Wall", 2DArray) = "" {}
+		_WallTexCount ("Wall Textures Count", Float) = 1
 		_LitRooms ("Lit Rooms", Range(0, 1)) = 0.5
 		_RoomLightColor ("Room Light Color", Color) = (1, 1, 0.25, 1)
 
@@ -62,12 +65,13 @@ Shader "Interior Mapping (Object Space)"
 
 		#include "Assets/CGInc/Easing.cginc"
 		#include "Assets/CGInc/Maths.cginc"
+		#include "Assets/CGInc/Random.cginc"
 		#include "Assets/CGInc/UV.cginc"
 
 		#define RIGHT         float3(1, 0, 0)
 		#define UP            float3(0, 1, 0)
 		#define FORWARD       float3(0, 0, 1)
-		#define SMOOTHSTEP_AA 0.002
+		#define SMOOTHSTEP_AA 0.01
 
 		struct Input 
 		{
@@ -77,12 +81,16 @@ Shader "Interior Mapping (Object Space)"
 			float3 normal : NORMAL;
 		};
 
+		// Represents the interior mapping ray for each pixel.
+		// Contains the pixel color to use and the hit distance.
 		struct FragmentRayData
 		{
 			float3 color;
 			float distance;
 		};
 
+		// Represents the intersection between a ray and a plane.
+		// Contains the intersection position and distance from ray start position.
 		struct RayPlaneIntersection
 		{
 			float3 position;
@@ -92,44 +100,40 @@ Shader "Interior Mapping (Object Space)"
 		#define DECLARE_TEX2DARRAY_ST(tex) UNITY_DECLARE_TEX2DARRAY(tex); float4 tex##_ST;
 		#define DECLARE_TEX_ST(tex)        sampler2D tex; float4 tex##_ST;
 
+		// Dimensions.
 		float _CeilingsCount;
 		float _WallsCount;
 		float _IgnoredFloorsCount;
 		
+		// Interior.
         DECLARE_TEX2DARRAY_ST(_CeilingTex)
+		float _CeilingTexCount;
         DECLARE_TEX2DARRAY_ST(_FloorTex)
+		float _FloorTexCount;
         DECLARE_TEX2DARRAY_ST(_WallTex)
-		DECLARE_TEX_ST(_OutsideWallTex)
-		sampler2D _OutsideWallNormal;
-		sampler2D _WindowTex;
-		float4 _WindowTex_TexelSize;
-		sampler2D _WindowNormal;
-		sampler2D _ShuttersTex;
-		sampler2D _ShuttersNormal;
-		float _ShuttersHeightRemapMin;
-		float _ShuttersHeightRemapMax;
-
-		float _WindowRefraction;
-		float _RefractionStep;
-		float _BottomBricksHeight;
-		float _Shutters;
-		float _ClosedShutters;
+		float _WallTexCount;
 		float _LitRooms;
 		float4 _RoomLightColor;
+		
+		// Outside wall.
+		DECLARE_TEX_ST(_OutsideWallTex)
+		sampler2D _OutsideWallNormal;
+
+		// Windows.
+		sampler2D _WindowTex;
+		sampler2D _WindowNormal;
+		float4 _WindowTex_TexelSize;
+		float _WindowRefraction;
+		float _RefractionStep;
 		float4 _WindowGlassColor;
 
-		float2 random(float2 s)
-		{
-			return frac(sin(dot(s, float2(12.9898, 78.233))) * 43758.5453);
-		}
-
-		float3 hash23(float2 input)
-        {
-            float a = dot(input.xyx, float3(127.1, 311.7, 74.7));
-            float b = dot(input.yxx, float3(269.5, 183.3, 246.1));
-            float c = dot(input.xyy, float3(113.5, 271.9, 124.6));
-            return frac(sin(float3(a, b, c)) * 43758.5453123);
-        }
+		// Shutters.
+		sampler2D _ShuttersTex;
+		sampler2D _ShuttersNormal;
+		float _Shutters;
+		float _ClosedShutters;
+		float _ShuttersHeightRemapMin;
+		float _ShuttersHeightRemapMax;
 		
         RayPlaneIntersection rayToPlaneIntersection(float3 rayStart, float3 rayDirection, float3 planeNormal, float3 planePosition)
         {
@@ -154,14 +158,14 @@ Shader "Interior Mapping (Object Space)"
 
 		void surf(Input i, inout SurfaceOutputStandard o)
 		{
-			// https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
-
 			float dimensionsRatio = _WallsCount / _CeilingsCount;
+
+        	// Compute an offset to handle odd dimensions correctly.
         	float wallsOffset = 0.5 / _WallsCount * (_WallsCount % 2);
-        	float ceilingsOffset = 0; // 0.5 / _CeilingsCount * (_CeilingsCount % 2); // Only if objet's pivot is at the center.
+        	float ceilingsOffset = 0; // 0.5 / _CeilingsCount * (_CeilingsCount % 2); // Use commented part if objet's pivot is at the center.
         	float3 offset = float3(wallsOffset, ceilingsOffset, wallsOffset);
 
-			float3 worldScale = float3
+			float3 transformScale = float3
 			(
 			    length(unity_ObjectToWorld._m00_m10_m20),
 			    length(unity_ObjectToWorld._m01_m11_m21),
@@ -169,23 +173,26 @@ Shader "Interior Mapping (Object Space)"
 			);
 			
 			float3 rayDirection = normalize(i.objectViewDir);
-			float3 refractionDirection = hash23(floor(i.uv_WindowTex.xy * float2(1, worldScale.y) * _RefractionStep) / _RefractionStep);
+			float3 refractionDirection = hash23(floor(i.uv_WindowTex.xy * float2(1, transformScale.y) * _RefractionStep) / _RefractionStep);
 			rayDirection += refractionDirection * _WindowRefraction;
-			float3 rayStart = i.localPosition + offset + rayDirection * 1e-6;
+			float3 rayStart = i.localPosition + offset + rayDirection * 1e-6; // Move the ray a little forward to ensure it starts inside the room.
 
+        	// Ray initialization.
 			FragmentRayData rayData;
 			rayData.color = float3(1, 1, 1);
 			rayData.distance = 1e+64;
 
-			float floorIndex = floor(i.uv_WindowTex.y * _CeilingsCount);
 			float roof = dot(i.normal, UP);
-			float discardInterior = floorIndex < _IgnoredFloorsCount || (roof && _WindowTex_TexelSize.z > 1);
+			float floorIndex = floor(i.uv_WindowTex.y * _CeilingsCount);
+			float discardInterior = floorIndex < _IgnoredFloorsCount || (roof && _WindowTex_TexelSize.z > 1); // Discard interior mapping on roof, only if there are windows.
 			
         	float roomUID = random(ceil(i.uv_WindowTex.xy * float2(_WallsCount, _CeilingsCount)));
-			float ceilingTextureIndex = floor(roomUID * 4); // TODO: Find a way to get ceiling textures count dynamically.
-			float floorTextureIndex = floor(roomUID * 4); // TODO: Find a way to get floor textures count dynamically.
-			float wallTextureIndex = floor(roomUID * 8); // TODO: Find a way to get wall textures count dynamically.
+			float ceilingTextureIndex = floor(roomUID * _CeilingTexCount);
+			float floorTextureIndex = floor(roomUID * _FloorTexCount);
+			float wallTextureIndex = floor(roomUID * _WallTexCount);
 
+        	// Actual interior mapping code, using the explanations from this document.
+        	// https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf
 			float dc = 1.0 / _CeilingsCount;
 			float dw = 1.0 / _WallsCount;
 
@@ -262,46 +269,54 @@ Shader "Interior Mapping (Object Space)"
 			_Shutters = (1 - _Shutters) * step(_ClosedShutters, roomUID);
 			float shutterPercentage01 = _Shutters + _Shutters * roomUID;
 			float shutterPercentageRemapped = Remap(shutterPercentage01, 0, 1, _ShuttersHeightRemapMin, _ShuttersHeightRemapMax); // Remap from cell bounds to window bounds.
-			float2 shuttersGradient = frac(i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)).xy;
-			float4 shuttersColor = tex2D(_ShuttersTex, shuttersGradient - float2(0, shutterPercentageRemapped));
+			float2 shuttersGradient = frac(i.uv_WindowTex * float2(_WallsCount, _CeilingsCount));
 			float shuttersMask = smoothstep(shutterPercentageRemapped - SMOOTHSTEP_AA, shutterPercentageRemapped + SMOOTHSTEP_AA, shuttersGradient.y);
-			shuttersColor = lerp(0, shuttersColor, shuttersMask);
+        	float2 shuttersUV = shuttersGradient - float2(0, shutterPercentageRemapped);
+			float4 shuttersColor = tex2D(_ShuttersTex, shuttersUV) * shuttersMask;
 			if (lit == 0)
-				rayData.color.rgb *= OutQuad(saturate(shutterPercentage01 + _Shutters * roomUID)); // Reduce unlit room light based on shutter opening.
+				rayData.color.rgb *= OutQuad(saturate(shutterPercentage01 + _Shutters * roomUID)); // Reduce unlit room lighting based on shutter opening.
 			
 			// Outside wall color.
-			float2 uvScale = lerp(float2(_WallsCount, _CeilingsCount), float2(min(_WallsCount, _CeilingsCount).xx), roof);
-			float3 outsideWallColor = tex2D(_OutsideWallTex, uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * uvScale);
+			float2 outsideWallUVScale = lerp(float2(_WallsCount, _CeilingsCount), float2(min(_WallsCount, _CeilingsCount).xx), roof);
+        	float2 outsideWallUV = uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * outsideWallUVScale;
+			float3 outsideWallColor = tex2D(_OutsideWallTex, outsideWallUV);
 
-			// Final color computation.
+			// Albedo computation.
 			float3 color = outsideWallColor;
-            float4 windowColor = tex2D(_WindowTex, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount));
+        	float2 windowUV = i.uv_WindowTex * float2(_WallsCount, _CeilingsCount);
+            float4 windowColor = tex2D(_WindowTex, windowUV);
 			float windowGlassMask = saturate(windowColor.a - smoothstep(0, 0.5, 1 - Luminance(windowColor.rgb)));
-			color = lerp(color, windowColor.rgb, windowColor.a - windowGlassMask);
-            color = lerp(color, rayData.color, windowGlassMask);
-			color = lerp(color, shuttersColor, windowGlassMask * shuttersColor.a);
-			color = lerp(color, _WindowGlassColor, windowGlassMask * (1 - shuttersColor.a) * _WindowGlassColor.a);
+        	if (discardInterior == 0)
+        	{
+				color = lerp(color, windowColor.rgb, windowColor.a - windowGlassMask);
+	            color = lerp(color, rayData.color * _WindowGlassColor, windowGlassMask);
+				color = lerp(color, _WindowGlassColor, windowGlassMask * _WindowGlassColor.a);
+				color = lerp(color, shuttersColor, windowGlassMask * shuttersMask);
+        	}
 
-			// Normal computation.
-			float3 outsideWallNormal = UnpackNormal(tex2D(_OutsideWallNormal, uv_ST(i.uv_WindowTex, _OutsideWallTex_ST) * float2(_WallsCount, _CeilingsCount)));
-			float3 windowNormal = UnpackNormal(tex2D(_WindowNormal, i.uv_WindowTex * float2(_WallsCount, _CeilingsCount)));
-			float3 shuttersNormal = UnpackNormal(tex2D(_ShuttersNormal, shuttersGradient - float2(0, shutterPercentageRemapped)));
-			outsideWallNormal.xy *= (1 - windowColor.a);
-			windowNormal.xy *= windowColor.a * windowGlassMask * (1 - discardInterior);
-			if (_WindowTex_TexelSize.x == 1)
-				windowNormal.xy *= 0;
+			// Normals computation.
+			float3 outsideWallNormal = UnpackNormal(tex2D(_OutsideWallNormal, outsideWallUV));
+			float3 windowNormal = UnpackNormal(tex2D(_WindowNormal, windowUV));
+        	float3 shuttersNormal = UnpackNormal(tex2D(_ShuttersNormal, shuttersUV));
+			outsideWallNormal.xy *= 1 - windowColor.a;
+        	windowNormal.xy *= _WindowTex_TexelSize.x == 1 ? 0 : windowColor.a * windowGlassMask * (1 - discardInterior);
 			shuttersNormal.xy *= shuttersMask * (windowGlassMask * shuttersColor.a) * (1 - discardInterior);
-			float3 normal = saturate(outsideWallNormal + windowNormal + shuttersNormal);
+        	float3 normal = saturate(outsideWallNormal + windowNormal + shuttersNormal);
 
+        	// Emission computation.
+        	float3 emission = 0;
+        	if (discardInterior == 0)
+        		emission = _RoomLightColor * _RoomLightColor.a * lit * windowGlassMask * (1 - shuttersColor.a);
+        	
 			// Smoothness computation.
 			float smoothness = windowGlassMask * step(shuttersGradient.y, shutterPercentageRemapped);
 			if (discardInterior)
 				smoothness = 0;
-			else if (_WindowTex_TexelSize.x == 1) // No texture set in Inspector.
+			else if (_WindowTex_TexelSize.x == 1) // No texture set in material.
 				smoothness *= 1 - windowColor.a;
 			
-			o.Albedo = discardInterior ? outsideWallColor : color;
-			o.Emission = discardInterior ? 0 : _RoomLightColor * _RoomLightColor.a * lit * windowGlassMask * (1 - shuttersColor.a);
+			o.Albedo = color;
+			o.Emission = emission;
 			o.Normal = normal;
 			o.Smoothness = smoothness;
 		}

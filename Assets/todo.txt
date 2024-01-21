@@ -1,5 +1,2 @@
 - Doors on first floor. Pushed inside the wall using interior mapping too?
 - Better room texturing (not the same texturing for all walls).
-- TODOs in shader code.
-- Shaders cleanup/comments.
-- Remove bottom bricks.
