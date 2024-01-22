@@ -34,6 +34,7 @@ Shader "Interior Mapping"
 		[Space(5)]
 		[NoScaleOffset] _WindowTex ("Window", 2D) = "white" {}
 		[NoScaleOffset] [Normal] _WindowNormal ("Window Normal", 2D) = "bump" {}
+		[NoScaleOffset] _WindowGlassMask ("Window Glass Mask", 2D) = "white" {}
 		_WindowRefraction ("Window Refraction", Range(0, 0.1)) = 0
 		_RefractionStep ("Refraction Step", Float) = 1024
 		_WindowGlassColor ("Window Color", Color) = (1,1,1,0)
@@ -122,6 +123,7 @@ Shader "Interior Mapping"
 		// Windows.
 		sampler2D _WindowTex;
 		sampler2D _WindowNormal;
+		sampler2D _WindowGlassMask;
 		float4 _WindowTex_TexelSize;
 		float _WindowRefraction;
 		float _RefractionStep;
@@ -145,6 +147,13 @@ Shader "Interior Mapping"
         	return result;
         }
 
+		float4 alphaBlend(float4 top, float4 bottom)
+		{
+			float3 color = (top.rgb * top.a) + (bottom.rgb * (1 - top.a));
+			float alpha = top.a + bottom.a * (1 - top.a);
+			return float4(color, alpha);
+		}
+		
 		void vert(inout appdata_full i, out Input o)
 		{
 			UNITY_INITIALIZE_OUTPUT(Input, o);
@@ -285,10 +294,13 @@ Shader "Interior Mapping"
 			float3 color = outsideWallColor;
         	float2 windowUV = i.uv_WindowTex * float2(_WallsCount, _CeilingsCount);
             float4 windowColor = tex2D(_WindowTex, windowUV);
-			float windowGlassMask = saturate(windowColor.a - smoothstep(0, 0.5, 1 - Luminance(windowColor.rgb)));
+        	float windowGlassMask = tex2D(_WindowGlassMask, windowUV).r * (1 - windowColor.a);
+        	if (_WindowTex_TexelSize.x == 1)
+        		windowGlassMask = 1;
+        	
         	if (discardInterior == 0)
         	{
-				color = lerp(color, windowColor.rgb, windowColor.a - windowGlassMask);
+				color = lerp(color, windowColor.rgb, windowColor.a);
 	            color = lerp(color, rayData.color * _WindowGlassColor, windowGlassMask);
 				color = lerp(color, _WindowGlassColor, windowGlassMask * _WindowGlassColor.a);
 				color = lerp(color, shuttersColor, windowGlassMask * shuttersMask);
@@ -298,8 +310,8 @@ Shader "Interior Mapping"
 			float3 outsideWallNormal = UnpackNormal(tex2D(_OutsideWallNormal, outsideWallUV));
 			float3 windowNormal = UnpackNormal(tex2D(_WindowNormal, windowUV));
         	float3 shuttersNormal = UnpackNormal(tex2D(_ShuttersNormal, shuttersUV));
-			outsideWallNormal.xy *= 1 - windowColor.a;
-        	windowNormal.xy *= _WindowTex_TexelSize.x == 1 ? 0 : windowColor.a * windowGlassMask * (1 - discardInterior);
+			outsideWallNormal.xy *= (1 - windowColor.a) * (1 - windowGlassMask);
+        	windowNormal.xy *= _WindowTex_TexelSize.x == 1 ? 0 : windowColor.a;
 			shuttersNormal.xy *= shuttersMask * (windowGlassMask * shuttersColor.a) * (1 - discardInterior);
         	float3 normal = saturate(outsideWallNormal + windowNormal + shuttersNormal);
 
