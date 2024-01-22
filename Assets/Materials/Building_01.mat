@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: TestCube
+  m_Name: Building_01
   m_Shader: {fileID: 4800000, guid: 8328c16214d9f6b47bfd1041d1f49ea7, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -87,12 +87,16 @@ Material:
         m_Texture: {fileID: 18700000, guid: 3385aad54ae4e544db1cf6debdcfcda9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _WindowGlassMask:
+        m_Texture: {fileID: 2800000, guid: 54c029d35e6974549aa71eecad383b48, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _WindowNormal:
         m_Texture: {fileID: 2800000, guid: 07513fc6de2e12a40a5f6b15b748a340, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _WindowTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: fcac171771a30514f8c55318e7f1678c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -105,22 +109,22 @@ Material:
     - _BricksDamageTop: 0
     - _CeilingInterval: 1
     - _CeilingTexCount: 4
-    - _CeilingsCount: 4
+    - _CeilingsCount: 10
     - _CeilingsOffset: 0.5
-    - _ClosedShutters: 0
+    - _ClosedShutters: 0.16
     - _DbgRotation: 90
     - _Depth: 8.6
     - _FloorTexCount: 4
     - _IgnoreCeilingCount: 1
-    - _IgnoredFloorsCount: 0
-    - _LitRooms: 0
+    - _IgnoredFloorsCount: 1
+    - _LitRooms: 0.32
     - _RefractionStep: 32768
     - _Shutters: 0
-    - _ShuttersHeightRemapMax: 1
-    - _ShuttersHeightRemapMin: 0
+    - _ShuttersHeightRemapMax: 0.85
+    - _ShuttersHeightRemapMin: 0.15
     - _WallTexCount: 9
     - _WallsCount: 4
-    - _WindowRefraction: 0
+    - _WindowRefraction: 0.01
     m_Colors:
     - _CeilingColor: {r: 1, g: 1, b: 1, a: 1}
     - _ColorFloor: {r: 1, g: 0, b: 0, a: 1}
@@ -132,10 +136,10 @@ Material:
     - _DebugRayDirection: {r: 0, g: 0, b: 1, a: 0}
     - _DebugRayStart: {r: 0, g: 0, b: -1, a: 0}
     - _FloorColor: {r: 1, g: 1, b: 1, a: 1}
-    - _RoomLightColor: {r: 0.8207547, g: 0.38470972, b: 0.24390352, a: 0.92156863}
+    - _RoomLightColor: {r: 0.8414201, g: 0.40938297, b: 0, a: 1}
     - _WallBackColor: {r: 1, g: 1, b: 1, a: 1}
     - _WallLeftColor: {r: 1, g: 1, b: 1, a: 1}
     - _WallRightColor: {r: 1, g: 1, b: 1, a: 1}
     - _WindowColor: {r: 0.39279994, g: 0.8584906, b: 0.7366375, a: 0.13333334}
-    - _WindowGlassColor: {r: 0.8207547, g: 0.8207547, b: 0.8207547, a: 0.07058824}
+    - _WindowGlassColor: {r: 0.5696867, g: 0.6981132, b: 0.68588215, a: 0.36078432}
   m_BuildTextureStacks: []

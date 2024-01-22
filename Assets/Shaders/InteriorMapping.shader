@@ -19,7 +19,7 @@ Shader "Interior Mapping"
         _WallTex ("Wall", 2DArray) = "" {}
 		_WallTexCount ("Wall Textures Count", Float) = 1
 		_LitRooms ("Lit Rooms", Range(0, 1)) = 0.5
-		_RoomLightColor ("Room Light Color", Color) = (1, 1, 0.25, 1)
+		[HDR] _RoomLightColor ("Room Light Color", Color) = (1, 1, 0.25, 1)
 
 		[Space(30)]
 		
@@ -64,10 +64,10 @@ Shader "Interior Mapping"
 		#pragma require 2darray
 		#pragma target 3.5
 
-		#include "Assets/CGInc/Easing.cginc"
-		#include "Assets/CGInc/Maths.cginc"
-		#include "Assets/CGInc/Random.cginc"
-		#include "Assets/CGInc/UV.cginc"
+		#include "Assets/Shaders/CGInc/Easing.cginc"
+		#include "Assets/Shaders/CGInc/Maths.cginc"
+		#include "Assets/Shaders/CGInc/Random.cginc"
+		#include "Assets/Shaders/CGInc/UV.cginc"
 
 		#define RIGHT         float3(1, 0, 0)
 		#define UP            float3(0, 1, 0)
